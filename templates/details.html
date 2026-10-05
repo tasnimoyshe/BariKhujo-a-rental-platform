@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ property.title }} - BashaKhuji</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F9FAFB; }
+        .thumbnail.active { border-color: #10B981; opacity: 1; }
+        .thumbnail { border: 3px solid transparent; opacity: 0.6; transition: all 0.2s ease-in-out; cursor: pointer; }
+        .thumbnail:hover { opacity: 1; border-color: #d1fae5; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
+            <a href="{% url 'home' %}" class="text-2xl font-bold text-emerald-600">BashaKhuji</a>
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'post_property' %}" class="font-semibold text-sm text-gray-600 hover:text-emerald-600 transition">Post Property</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="text-sm font-bold text-gray-800 hover:text-emerald-600 transition cursor-pointer ml-2">Hi, {{ user.username }}</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="font-semibold text-sm text-gray-600 hover:text-emerald-600 transition">Log in</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-8 w-full">
+        <a href="{% url 'home' %}" class="text-emerald-600 font-semibold text-sm flex items-center mb-6 hover:underline w-max">
+            &larr; Back to Listings
+        </a>
+
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <h1 class="text-3xl font-extrabold text-gray-900">{{ property.title }}</h1>
+                    {% if property.is_available %}
+                        <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md">Available</span>
+                    {% else %}
+                        <span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-md">Rented</span>
+                    {% endif %}
+                </div>
+                <p class="text-gray-500 flex items-center gap-2 font-medium">📍 {{ property.location }}</p>
+            </div>
+            <div class="text-left md:text-right">
+                <p class="text-sm text-gray-400 font-bold uppercase tracking-wider mb-1">Monthly Rent</p>
+                <p class="text-4xl font-extrabold text-emerald-600">৳ {{ property.rent }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 mb-8">
+            <div class="flex flex-col lg:flex-row gap-4 h-auto lg:h-[500px]">
+                <div class="w-full lg:w-3/4 h-[300px] sm:h-[400px] lg:h-full rounded-2xl overflow-hidden bg-gray-100">
+                    {% if property.image %}
+                        <img id="mainImage" src="{{ property.image.url }}" alt="{{ property.title }}" class="w-full h-full object-cover transition-opacity duration-300">
+                    {% else %}
+                        <img id="mainImage" src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3" alt="Default" class="w-full h-full object-cover">
+                    {% endif %}
+                </div>
+                
+                <div class="w-full lg:w-1/4 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto pb-2 lg:pb-0 custom-scrollbar pr-1">
+                    {% if property.image %}
+                    <div class="shrink-0 w-24 lg:w-full h-24 lg:h-[110px] rounded-xl overflow-hidden">
+                        <img src="{{ property.image.url }}" onclick="changeImage(this.src, this)" class="thumbnail active w-full h-full object-cover">
+                    </div>
+                    {% endif %}
+                    
+                    {% for p_image in property.additional_images.all %}
+                    <div class="shrink-0 w-24 lg:w-full h-24 lg:h-[110px] rounded-xl overflow-hidden">
+                        <img src="{{ p_image.image.url }}" onclick="changeImage(this.src, this)" class="thumbnail w-full h-full object-cover">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
+                        <span class="text-2xl block mb-1">🛏️</span>
+                        <p class="text-gray-500 text-xs font-bold uppercase">Bedrooms</p>
+                        <p class="text-gray-900 font-extrabold text-lg">{{ property.bedrooms }}</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
+                        <span class="text-2xl block mb-1">🚿</span>
+                        <p class="text-gray-500 text-xs font-bold uppercase">Bathrooms</p>
+                        <p class="text-gray-900 font-extrabold text-lg">{{ property.bathrooms }}</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
+                        <span class="text-2xl block mb-1">👥</span>
+                        <p class="text-gray-500 text-xs font-bold uppercase">Tenant Type</p>
+                        <p class="text-gray-900 font-extrabold text-lg">{{ property.tenant_type }}</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
+                        <span class="text-2xl block mb-1">{% if property.pet_allowed %}🐾{% else %}🚫{% endif %}</span>
+                        <p class="text-gray-500 text-xs font-bold uppercase">Pets Allowed</p>
+                        <p class="text-gray-900 font-extrabold text-lg">{% if property.pet_allowed %}Yes{% else %}No{% endif %}</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
+                    <h2 class="text-xl font-extrabold text-gray-900 mb-6">Facilities & Amenities</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center {% if property.has_attached_bath %}bg-emerald-100 text-emerald-600{% else %}bg-gray-100 text-gray-400{% endif %}">✓</div>
+                            <span class="font-bold text-gray-700">Attached Bath</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center {% if property.has_lift %}bg-emerald-100 text-emerald-600{% else %}bg-gray-100 text-gray-400{% endif %}">✓</div>
+                            <span class="font-bold text-gray-700">Lift / Elevator</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center {% if property.has_gas_line %}bg-emerald-100 text-emerald-600{% else %}bg-gray-100 text-gray-400{% endif %}">✓</div>
+                            <span class="font-bold text-gray-700">Gas Line</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center {% if property.has_generator %}bg-emerald-100 text-emerald-600{% else %}bg-gray-100 text-gray-400{% endif %}">✓</div>
+                            <span class="font-bold text-gray-700">Generator</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center {% if property.has_security %}bg-emerald-100 text-emerald-600{% else %}bg-gray-100 text-gray-400{% endif %}">✓</div>
+                            <span class="font-bold text-gray-700">Security Guard</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if property.video %}
+                <div class="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
+                    <h2 class="text-xl font-extrabold text-gray-900 mb-6">Property Tour (Video)</h2>
+                    <div class="rounded-2xl overflow-hidden bg-black aspect-video w-full shadow-inner">
+                        <video controls class="w-full h-full object-contain">
+                            <source src="{{ property.video.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Sidebar: Contact Card (Sticky) with Phone/WhatsApp feature -->
+            <div>
+                <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-xl sticky top-24">
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Interested in this property?</h3>
+                    <p class="text-sm text-gray-500 mb-6 font-medium">Contact the owner directly to schedule a visit or ask for more details.</p>
+                    
+                    <div class="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold text-xl uppercase">
+                            {{ property.owner.username|make_list|first }}
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold tracking-wide">Owner</p>
+                            <p class="font-extrabold text-gray-900 text-lg">{{ property.owner.username }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Owner Contact Info Display -->
+                    <div class="mb-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
+                        <p class="text-xs text-emerald-700 font-bold uppercase mb-1">Direct Call / WhatsApp</p>
+                        <p class="text-xl font-black text-emerald-900">
+                            {% if property.owner.profile.phone_number %}
+                                {{ property.owner.profile.phone_number }}
+                            {% else %}
+                                Not Provided
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    {% if property.owner.profile.phone_number %}
+                    <a href="tel:{{ property.owner.profile.phone_number }}" class="block text-center w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition shadow-lg shadow-emerald-200 mb-3">
+                        📞 Call Owner Now
+                    </a>
+                    <a href="https://wa.me/88{{ property.owner.profile.phone_number }}?text=Hi, I am interested in your property '{{ property.title }}' listed on BashaKhuji." target="_blank" class="block text-center w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition shadow-md">
+                        💬 Chat on WhatsApp
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function changeImage(src, element) {
+            const mainImage = document.getElementById('mainImage');
+            mainImage.style.opacity = '0.5'; 
+            setTimeout(() => {
+                mainImage.src = src;
+                mainImage.style.opacity = '1';
+            }, 150);
+
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+    </script>
+</body>
+</html>

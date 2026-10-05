@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Your Property - BashaKhuji</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Choices.js CSS & JS for Advanced Searchable Dropdowns -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9fa; }
+        
+        .minimal-input {
+            width: 100%;
+            background-color: transparent;
+            border: none;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.5rem 0;
+            font-size: 0.95rem;
+            color: #1f2937;
+            outline: none;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .minimal-input:focus {
+            border-bottom-color: #0f9d58;
+            box-shadow: 0 1px 0 0 #0f9d58;
+        }
+        
+        select.minimal-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right center;
+            background-size: 1em;
+            padding-right: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Choices.js Minimal Aesthetic Overrides */
+        .choices[data-type*="select-one"] .choices__inner {
+            background-color: transparent;
+            border: none;
+            border-bottom: 1px solid #e5e7eb;
+            border-radius: 0;
+            padding: 0.2rem 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1f2937;
+            transition: all 0.2s;
+            min-height: auto;
+        }
+        .choices.is-focused .choices__inner { border-bottom-color: #0f9d58; box-shadow: 0 1px 0 0 #0f9d58; }
+        .choices__list--dropdown { border-radius: 0.75rem; border: 1px solid #f3f4f6; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); padding: 0.5rem; z-index: 50; }
+        .choices__input { background-color: #f9fafb; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+        .choices[data-type*="select-one"]::after { border-color: #9ca3af transparent transparent transparent; }
+
+        .custom-checkbox { width: 1.1rem; height: 1.1rem; border-radius: 0.25rem; border: 1.5px solid #cbd5e1; cursor: pointer; accent-color: #0f9d58; }
+        .preview-box { position: relative; width: 100px; height: 100px; border-radius: 0.5rem; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .preview-box img, .preview-box video { width: 100%; height: 100%; object-fit: cover; }
+        
+        input[type="file"]::file-selector-button { padding: 0.5rem 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: white; color: #374151; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        input[type="file"]::file-selector-button:hover { background-color: #f3f4f6; }
+        .section-title { font-size: 0.9rem; font-weight: 800; color: #111827; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f3f4f6; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="max-w-[1000px] mx-auto py-8 px-4 sm:px-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-visible pb-10">
+            
+            <div class="bg-[#0f9d58] px-8 sm:px-12 py-10 text-white rounded-t-2xl">
+                <h1 class="text-3xl font-extrabold mb-2">List Your Property</h1>
+                <p class="text-emerald-50 text-sm font-medium">Add details, upload photos, and find the perfect tenant quickly.</p>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" class="px-8 sm:px-12 pt-10" id="propertyForm">
+                {% csrf_token %}
+
+                <!-- Title -->
+                <div class="mb-10">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Title</label>
+                    <input type="text" name="title" required placeholder="e.g. Beautiful 2 Bed Apartment in Mirpur" class="minimal-input text-lg">
+                </div>
+
+                <!-- Location Details (Dynamic, Searchable & Minimal) -->
+                <div class="mb-8">
+                    <h3 class="flex items-center gap-2 text-[0.95rem] font-extrabold text-gray-900 mb-6">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Property Location
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6">
+                        <div>
+                            <label class="block text-[0.7rem] font-bold text-gray-500 uppercase tracking-widest mb-1">District</label>
+                            <select name="district" id="district-select" required>
+                                <option value="" disabled selected>Search district...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[0.7rem] font-bold text-gray-500 uppercase tracking-widest mb-1">Area / Location</label>
+                            <select name="location" id="area-select" required disabled>
+                                <option value="" disabled selected>Select district first...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Popular Location Chips -->
+                    <div class="mt-5 flex items-center flex-wrap gap-3">
+                        <span class="text-xs font-bold text-gray-400">Popular:</span>
+                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Mirpur">Mirpur</button>
+                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Uttara">Uttara</button>
+                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Dhanmondi">Dhanmondi</button>
+                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Bashundhara">Bashundhara</button>
+                    </div>
+                </div>
+
+                <!-- Detailed Street Address (New) -->
+                <div class="mb-12 border-b border-gray-100 pb-10 mt-6">
+                    <label class="flex items-center gap-2 text-[0.75rem] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Detailed Address <span class="text-gray-400 font-medium normal-case tracking-normal ml-1">(Optional)</span>
+                    </label>
+                    <input type="text" name="street_address" class="minimal-input" placeholder="e.g. Holding 42, Road 7, Block C, Rose Valley Apartment">
+                    <p class="text-[0.7rem] text-gray-400 mt-1.5">This builds trust with tenants. Share exact details like building name or sector.</p>
+                </div>
+
+                <!-- 2-Column Grid for Primary Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10 mb-12">
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Listing type</label>
+                        <select name="listing_type" class="minimal-input">
+                            <option value="Rent">For Rent</option>
+                            <option value="Sale">For Sale</option>
+                        </select>
+                    </div>
+
+                    <!-- CUSTOM PROPERTY TYPE SELECTOR -->
+                    <div class="relative" id="custom-dropdown-container">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Property type</label>
+                        <input type="hidden" name="category" id="id_category" value="Residential">
+                        <input type="hidden" name="property_type" id="id_property_type" value="Apartment">
+
+                        <div id="dropdown-trigger" class="minimal-input flex justify-between items-center cursor-pointer bg-transparent">
+                            <span id="dropdown-display" class="text-gray-900">Apartment</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+
+                        <div id="custom-popover" class="hidden absolute top-full left-0 mt-2 w-[380px] bg-white border border-gray-100 rounded-xl shadow-2xl z-50 p-5">
+                            <div class="flex p-1 bg-gray-100 border border-gray-200 rounded-lg mb-5">
+                                <button type="button" id="tab-residential" class="flex-1 py-1.5 text-sm font-bold text-gray-900 bg-white shadow-sm rounded-md transition">Residential</button>
+                                <button type="button" id="tab-commercial" class="flex-1 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition">Commercial</button>
+                            </div>
+                            <div id="grid-residential" class="grid grid-cols-2 gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Apartment" data-cat="Residential" class="custom-checkbox" checked><span class="text-sm font-medium text-gray-700">Apartment</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="House" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">House</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Sublet Room" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Sublet Room</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Single Room" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Single Room</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Hostel" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Hostel</span></label>
+                            </div>
+                            <div id="grid-commercial" class="hidden grid grid-cols-2 gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Offices" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Offices</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Building" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Building</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Restaurant" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Restaurant</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Factory / Mill" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Factory / Mill</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Commercial" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Commercial</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Warehouse" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Warehouse</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Shop" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Shop</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Garage" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Garage</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financials -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Rent or price (Monthly)</label>
+                        <input type="number" name="rent_or_price" min="2000" step="500" required class="minimal-input font-bold text-emerald-700" placeholder="e.g. 15000">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Service charge</label>
+                        <input type="number" name="service_charge" min="0" step="100" value="500" class="minimal-input text-gray-500">
+                    </div>
+
+                    <!-- Technical & Target -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Floor Level</label>
+                        <select name="floor" class="minimal-input">
+                            <option value="Ground">Ground Floor</option>
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                            <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                            <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+                            <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tenant Preference</label>
+                        <select name="tenant_type" class="minimal-input">
+                            <option value="Family">Family</option>
+                            <option value="Bachelor - Male">Bachelor - Male</option>
+                            <option value="Bachelor - Female">Bachelor - Female</option>
+                            <option value="Bachelor - Any">Bachelor - Any</option>
+                            <option value="Small Family / Couple">Small Family / Couple</option>
+                            <option value="Office / Commercial">Office / Commercial</option>
+                            <option value="Any (family/bachelor)">Any (family/bachelor)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Available from</label>
+                        <input type="date" name="available_from" class="minimal-input text-gray-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Facing</label>
+                        <select name="facing" class="minimal-input">
+                            <option value="">---------</option>
+                            <option value="East">East</option><option value="West">West</option><option value="North">North</option><option value="South">South</option>
+                            <option value="North-East">North-East</option><option value="North-West">North-West</option><option value="South-East">South-East</option><option value="South-West">South-West</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Room Details -->
+                <h3 class="section-title mt-8">Room Details</h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-12">
+                    <div>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Bedrooms</label>
+                        <select name="bedrooms" class="minimal-input"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Bathrooms</label>
+                        <select name="bathrooms" class="minimal-input"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Balconies</label>
+                        <select name="balconies" class="minimal-input"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Drawing</label>
+                        <select name="drawing_room" class="minimal-input"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Dining</label>
+                        <select name="dining_room" class="minimal-input"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select>
+                    </div>
+                </div>
+
+                <!-- Comprehensive Amenities Section -->
+                <h3 class="section-title">Property Amenities & Facilities</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-8 mb-12 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">⚡ Gas & Electricity</h4>
+                        <select name="gas_type" class="minimal-input text-sm"><option value="None">No Gas Facility</option><option value="Line Gas">Line Gas (Titas)</option><option value="Cylinder Gas">Cylinder Gas</option></select>
+                        <select name="electricity_meter" class="minimal-input text-sm"><option value="Prepaid Meter">Prepaid Meter</option><option value="Sub-Meter">Sub-Meter</option></select>
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">💧 Water & Parking</h4>
+                        <select name="water_supply" class="minimal-input text-sm"><option value="WASA Line">WASA Line</option><option value="Deep Tube-well">Deep Tube-well (Pump)</option><option value="Both">Both</option></select>
+                        <select name="parking_facility" class="minimal-input text-sm"><option value="None">No Parking</option><option value="Car Parking">Car Parking</option><option value="Bike Parking">Bike Parking</option><option value="Both">Both (Car & Bike)</option></select>
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">🏗️ Floor Type</h4>
+                        <select name="floor_type" class="minimal-input text-sm"><option value="Tiled">Tiled Floor</option><option value="Normal Floor">Normal Floor / Mosaic</option></select>
+                    </div>
+
+                    <div class="col-span-1 md:col-span-3 border-t border-gray-200 pt-6 mt-2">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_attached_bath" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Attached Bath</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_balcony" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Balcony Attached</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_ac_point" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">AC Point</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_geyser_point" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Geyser Point</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_washing_machine_point" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Washing Machine Point</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_lift" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Lift / Elevator</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_generator" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Generator Backup</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_cctv" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">CCTV Camera</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_security_guard" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Security Guard</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-10">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description <span class="text-gray-400 font-medium normal-case tracking-normal ml-1">(Optional)</span></label>
+                    <textarea name="description" rows="3" class="minimal-input resize-none" placeholder="Any additional information you want to share with tenants..."></textarea>
+                </div>
+
+                <!-- Media Uploads with Live Preview -->
+                <h3 class="section-title">Media Uploads</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                    <div class="border border-gray-200 rounded-xl p-5 bg-gray-50">
+                        <label class="block text-sm font-bold text-gray-800 mb-3">📸 Upload Photos</label>
+                        <input type="file" name="image" id="image-upload" accept="image/*" multiple class="w-full mb-4 outline-none">
+                        <div id="image-preview-container" class="flex flex-wrap gap-3"></div>
+                    </div>
+                    <div class="border border-gray-200 rounded-xl p-5 bg-gray-50">
+                        <label class="block text-sm font-bold text-gray-800 mb-3">🎥 Upload Video (Optional)</label>
+                        <input type="file" name="video" id="video-upload" accept="video/mp4,video/x-m4v,video/*" class="w-full mb-4 outline-none">
+                        <div id="video-preview-container" class="flex flex-wrap gap-3"></div>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="flex items-center justify-end gap-4 mt-12 border-t border-gray-100 pt-6">
+                    <a href="{% url 'dashboard' %}" class="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 transition">Cancel</a>
+                    <button type="submit" class="bg-[#0f9d58] text-white text-sm font-bold px-10 py-3.5 rounded-lg shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:-translate-y-0.5 transition-all">
+                        Publish Listing
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Interactive Scripts -->
+    <script>
+        // --- 1. EXTENDED Location Database (All 64 Districts with Major Upazilas/Areas) ---
+        const locationDB = {
+            "Bagerhat": ["Bagerhat Sadar", "Mongla", "Morrelganj", "Chitalmari", "Fakirhat", "Kachua", "Mollahat", "Rampal", "Sarankhola"],
+            "Bandarban": ["Bandarban Sadar", "Thanchi", "Lama", "Alikadam", "Naikhongchhari", "Rowangchhari", "Ruma"],
+            "Barguna": ["Barguna Sadar", "Amtali", "Patharghata", "Bamna", "Betagi", "Taltali"],
+            "Barishal": ["Barishal Sadar", "Agailjhara", "Babuganj", "Bakerganj", "Banaripara", "Gaurnadi", "Hizla", "Mehendiganj", "Muladi", "Wazirpur", "Rupatali", "Nathullabad"],
+            "Bhola": ["Bhola Sadar", "Char Fasson", "Lalmohan", "Borhanuddin", "Daulatkhan", "Monpura", "Tazumuddin"],
+            "Bogura": ["Bogura Sadar", "Shibganj", "Sherpur", "Adamdighi", "Dhunat", "Dupchanchia", "Gabtali", "Kahaloo", "Nandigram", "Sariakandi", "Sonatala"],
+            "Brahmanbaria": ["Brahmanbaria Sadar", "Ashuganj", "Akhaura", "Bancharampur", "Bijoynagar", "Kasba", "Nabinagar", "Nasirnagar", "Sarail"],
+            "Chandpur": ["Chandpur Sadar", "Hajiganj", "Kachua", "Faridganj", "Haimchar", "Matlab Dakshin", "Matlab Uttar", "Shahrasti"],
+            "Chattogram": ["Agrabad", "Halishahar", "Khulshi", "Nasirabad", "Pahartali", "GEC Circle", "Patenga", "Hathazari", "Sitakunda", "Mirsharai", "Patiya", "Fatikchhari", "Boalkhali", "Chandanaish", "Anwara", "Lohagara", "Satkania", "Banshkhali"],
+            "Chuadanga": ["Chuadanga Sadar", "Alamdanga", "Darshana", "Damurhuda", "Jibannagar"],
+            "Cox's Bazar": ["Cox's Bazar Sadar", "Ramu", "Teknaf", "Ukhia", "Chakaria", "Kutubdia", "Maheshkhali", "Pekua"],
+            "Cumilla": ["Cumilla Sadar", "Kandirpar", "Paduar Bazar", "Kotbari", "Daudkandi", "Laksam", "Barura", "Brahmanpara", "Burichang", "Chandina", "Chauddagram", "Debidwar", "Homna", "Meghna", "Muradnagar", "Nangalkot", "Titas"],
+            "Dhaka": ["Mirpur", "Mirpur DOHS", "Uttara", "Dhanmondi", "Bashundhara", "Gulshan", "Banani", "Mohammadpur", "Badda", "Khilgaon", "Motijheel", "Paltan", "Rampura", "Tejgaon", "Savar", "Keraniganj", "Dhamrai", "Nawabganj", "Dohar"],
+            "Dinajpur": ["Dinajpur Sadar", "Phulbari", "Nawabganj", "Biral", "Bochaganj", "Chirirbandar", "Ghoraghat", "Hakimpur", "Kaharole", "Khansama", "Parbatipur", "Birampur"],
+            "Faridpur": ["Faridpur Sadar", "Bhanga", "Boalmari", "Alfadanga", "Charbhadrasan", "Madhukhali", "Nagarkanda", "Sadarpur", "Saltha"],
+            "Feni": ["Feni Sadar", "Chhagalnaiya", "Daganbhuiyan", "Parshuram", "Sonagazi", "Fulgazi"],
+            "Gaibandha": ["Gaibandha Sadar", "Gobindaganj", "Palashbari", "Fulchhari", "Sadullapur", "Saghata", "Sundarganj"],
+            "Gazipur": ["Gazipur Sadar", "Tongi", "Board Bazar", "Chourasta", "Kapasia", "Kaliakair", "Kaliganj", "Sreepur"],
+            "Gopalganj": ["Gopalganj Sadar", "Kotalipara", "Tungipara", "Kashiani", "Muksudpur"],
+            "Habiganj": ["Habiganj Sadar", "Chunarughat", "Madhabpur", "Ajmiriganj", "Bahubal", "Baniyachong", "Lakhai", "Nabiganj", "Shayestaganj"],
+            "Jamalpur": ["Jamalpur Sadar", "Sarishabari", "Melandaha", "Baksiganj", "Dewanganj", "Islampur", "Madarganj"],
+            "Jashore": ["Jashore Sadar", "Abhaynagar", "Benapole", "Bagherpara", "Chaugachha", "Jhikargachha", "Keshabpur", "Manirampur", "Sharsha"],
+            "Jhalokati": ["Jhalokati Sadar", "Nalchity", "Rajapur", "Kathalia"],
+            "Jhenaidah": ["Jhenaidah Sadar", "Shailkupa", "Kaliganj", "Harinakundu", "Kotchandpur", "Maheshpur"],
+            "Joypurhat": ["Joypurhat Sadar", "Panchbibi", "Akkelpur", "Kalai", "Khetlal"],
+            "Khagrachari": ["Khagrachari Sadar", "Dighinala", "Matiranga", "Mahalchhari", "Manikchhari", "Panchhari", "Ramgarh", "Lakshmichhari"],
+            "Khulna": ["Khulna Sadar", "Sonadanga", "Khalishpur", "Daulatpur", "Boyra", "Rupsha", "Batiaghata", "Dacope", "Dumuria", "Dighalia", "Koyra", "Paikgacha", "Phultala", "Terokhada"],
+            "Kishoreganj": ["Kishoreganj Sadar", "Bhairab", "Bajitpur", "Austagram", "Hossainpur", "Itna", "Karimganj", "Katiadi", "Kuliarchar", "Mithamain", "Nikli", "Pakundia", "Tarail"],
+            "Kurigram": ["Kurigram Sadar", "Ulipur", "Nageshwari", "Bhurungamari", "Char Rajibpur", "Chilmari", "Phulbari", "Rajarhat", "Rowmari"],
+            "Kushtia": ["Kushtia Sadar", "Bheramara", "Kumarkhali", "Daulatpur", "Khoksa", "Mirpur"],
+            "Lakshmipur": ["Lakshmipur Sadar", "Ramganj", "Raipur", "Kamalnagar", "Ramgati"],
+            "Lalmonirhat": ["Lalmonirhat Sadar", "Patgram", "Kaliganj", "Aditmari", "Hatibandha"],
+            "Madaripur": ["Madaripur Sadar", "Shibchar", "Kalkini", "Rajoir"],
+            "Magura": ["Magura Sadar", "Sreepur", "Mohammadpur", "Shalikha"],
+            "Manikganj": ["Manikganj Sadar", "Singair", "Saturia", "Daulatpur", "Ghior", "Harirampur", "Shivalaya"],
+            "Meherpur": ["Meherpur Sadar", "Gangni", "Mujibnagar"],
+            "Moulvibazar": ["Moulvibazar Sadar", "Sreemangal", "Kulaura", "Barlekha", "Juri", "Kamalganj", "Rajnagar"],
+            "Munshiganj": ["Munshiganj Sadar", "Sirajdikhan", "Sreenagar", "Gazaria", "Lauhajang", "Tongibari"],
+            "Mymensingh": ["Mymensingh Sadar", "Bhaluka", "Muktagacha", "Trishal", "Dhobaura", "Fulbaria", "Gaffargaon", "Gauripur", "Haluaghat", "Ishwarganj", "Nandail", "Phulpur", "Tara Khanda"],
+            "Naogaon": ["Naogaon Sadar", "Niamatpur", "Sapahar", "Atrai", "Badalgachhi", "Dhamoirhat", "Manda", "Mohadevpur", "Patnitala", "Porsha", "Raninagar"],
+            "Narail": ["Narail Sadar", "Lohagara", "Kalia"],
+            "Narayanganj": ["Narayanganj Sadar", "Chashara", "Fatullah", "Siddhirganj", "Rupganj", "Sonargaon", "Araihazar"],
+            "Narsingdi": ["Narsingdi Sadar", "Shibpur", "Raipura", "Belabo", "Monohardi", "Palash"],
+            "Natore": ["Natore Sadar", "Singra", "Baraigram", "Bagatipara", "Gurudaspur", "Lalpur", "Naldanga"],
+            "Netrokona": ["Netrokona Sadar", "Kendua", "Mohanganj", "Atpara", "Barhatta", "Durgapur", "Kalmakanda", "Khaliajuri", "Madan", "Purbadhala"],
+            "Nilphamari": ["Nilphamari Sadar", "Saidpur", "Domar", "Dimla", "Jaldhaka", "Kishoreganj"],
+            "Noakhali": ["Maijdee", "Noakhali Sadar", "Begumganj", "Chatkhil", "Companiganj", "Hatiya", "Kabirhat", "Senbagh", "Sonaimuri", "Subarnachar"],
+            "Pabna": ["Pabna Sadar", "Ishwardi", "Bera", "Atgharia", "Bhangura", "Chatmohar", "Faridpur", "Santhia", "Sujanagar"],
+            "Panchagarh": ["Panchagarh Sadar", "Boda", "Tetulia", "Atwari", "Debiganj"],
+            "Patuakhali": ["Patuakhali Sadar", "Bauphal", "Galachipa", "Dashmina", "Dumki", "Kalapara", "Mirzaganj", "Rangabali"],
+            "Pirojpur": ["Pirojpur Sadar", "Bhandaria", "Mathbaria", "Indurkani", "Kawkhali", "Nazirpur", "Nesarabad"],
+            "Rajbari": ["Rajbari Sadar", "Pangsha", "Goalanda", "Baliakandi", "Kalukhali"],
+            "Rajshahi": ["Rajshahi Sadar", "Shaheb Bazar", "Motihar", "Boalia", "Rajpara", "Godagari", "Bagha", "Bagmara", "Charghat", "Durgapur", "Mohanpur", "Paba", "Puthia", "Tanore"],
+            "Rangamati": ["Rangamati Sadar", "Kaptai", "Baghaichhari", "Belaichhari", "Barkal", "Juraichhari", "Kawkhali", "Langadu", "Naniarchar", "Rajasthali"],
+            "Rangpur": ["Rangpur Sadar", "Mithapukur", "Pirganj", "Badarganj", "Gangachhara", "Kaunia", "Pirgachha", "Taraganj"],
+            "Satkhira": ["Satkhira Sadar", "Shyamnagar", "Assasuni", "Debhata", "Kalaroa", "Kaliganj", "Tala"],
+            "Shariatpur": ["Shariatpur Sadar", "Zanjira", "Bhedarganj", "Damudya", "Gosairhat", "Naria"],
+            "Sherpur": ["Sherpur Sadar", "Nalitabari", "Sreebardi", "Jhenaigati", "Nakla"],
+            "Sirajganj": ["Sirajganj Sadar", "Shahjadpur", "Ullahpara", "Belkuchi", "Chauhali", "Kamarkhanda", "Kazipur", "Raiganj", "Tarash"],
+            "Sunamganj": ["Sunamganj Sadar", "Chhatak", "Jagannathpur", "Bishwamvarpur", "Derai", "Dharamapasha", "Dowarabazar", "Jamalganj", "Sullah", "Tahirpur"],
+            "Sylhet": ["Sylhet Sadar", "Zindabazar", "Uposhohor", "Amberkhana", "Bandarbazar", "Shibganj", "Beanibazar", "Bishwanath", "Companiganj", "Dakshin Surma", "Fenchuganj", "Golapganj", "Gowainghat", "Jaintiapur", "Kanaighat", "Osmani Nagar", "Zakiganj"],
+            "Tangail": ["Tangail Sadar", "Mirzapur", "Ghatail", "Basail", "Bhuapur", "Delduar", "Dhanbari", "Gopalpur", "Kalihati", "Madhupur", "Nagarpur", "Sakhipur"],
+            "Thakurgaon": ["Thakurgaon Sadar", "Pirganj", "Baliadangi", "Haripur", "Ranisankail"]
+        };
+
+        // Initialize Choices.js
+        const districtSelect = new Choices('#district-select', { searchPlaceholderValue: "Search your district...", itemSelectText: "" });
+        const areaSelect = new Choices('#area-select', { searchPlaceholderValue: "Search your area...", itemSelectText: "" });
+
+        // Populate Districts A-Z
+        const districts = Object.keys(locationDB).sort();
+        const districtChoices = districts.map(d => ({ value: d, label: d }));
+        districtSelect.setChoices(districtChoices, 'value', 'label', true);
+
+        // Handle District Change (Dependent Area Logic)
+        document.getElementById('district-select').addEventListener('change', function(e) {
+            const selectedDistrict = e.target.value;
+            areaSelect.clearChoices();
+            areaSelect.clearStore();
+            
+            if (selectedDistrict && locationDB[selectedDistrict]) {
+                const areas = locationDB[selectedDistrict].sort();
+                const areaChoices = areas.map(a => ({ value: a, label: a }));
+                
+                areaSelect.setChoices(areaChoices, 'value', 'label', true);
+                areaSelect.enable();
+            } else {
+                areaSelect.disable();
+            }
+        });
+
+        // Quick Select Chips Logic
+        document.querySelectorAll('.location-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                const dist = this.getAttribute('data-district');
+                const area = this.getAttribute('data-area');
+                
+                districtSelect.setChoiceByValue(dist);
+                
+                areaSelect.clearChoices();
+                const areas = locationDB[dist].sort();
+                areaSelect.setChoices(areas.map(a => ({ value: a, label: a })), 'value', 'label', true);
+                areaSelect.enable();
+                
+                setTimeout(() => { areaSelect.setChoiceByValue(area); }, 100);
+            });
+        });
+
+        // --- 2. Custom Property Type Dropdown Logic ---
+        const trigger = document.getElementById('dropdown-trigger');
+        const popover = document.getElementById('custom-popover');
+        const display = document.getElementById('dropdown-display');
+        const tabRes = document.getElementById('tab-residential');
+        const tabCom = document.getElementById('tab-commercial');
+        const gridRes = document.getElementById('grid-residential');
+        const gridCom = document.getElementById('grid-commercial');
+        const inputCategory = document.getElementById('id_category');
+        const inputPropertyType = document.getElementById('id_property_type');
+        const radios = document.querySelectorAll('input[name="pt_dummy"]');
+
+        trigger.addEventListener('click', (e) => { popover.classList.toggle('hidden'); e.stopPropagation(); });
+        document.addEventListener('click', (e) => { if (!trigger.contains(e.target) && !popover.contains(e.target)) { popover.classList.add('hidden'); } });
+
+        function switchTab(type) {
+            if(type === 'Residential') {
+                tabRes.className = 'flex-1 py-1.5 text-sm font-bold text-gray-900 bg-white shadow-sm rounded-md transition';
+                tabCom.className = 'flex-1 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition bg-transparent';
+                gridRes.classList.remove('hidden');
+                gridCom.classList.add('hidden');
+            } else {
+                tabCom.className = 'flex-1 py-1.5 text-sm font-bold text-gray-900 bg-white shadow-sm rounded-md transition';
+                tabRes.className = 'flex-1 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition bg-transparent';
+                gridCom.classList.remove('hidden');
+                gridRes.classList.add('hidden');
+            }
+        }
+        tabRes.addEventListener('click', () => switchTab('Residential'));
+        tabCom.addEventListener('click', () => switchTab('Commercial'));
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                inputCategory.value = e.target.getAttribute('data-cat');
+                inputPropertyType.value = e.target.value;
+                display.innerText = e.target.value;
+                popover.classList.add('hidden');
+            });
+        });
+
+        // --- 3. Live Media Preview Logic ---
+        document.getElementById('image-upload').addEventListener('change', function(event) {
+            const container = document.getElementById('image-preview-container');
+            container.innerHTML = '';
+            const files = event.target.files;
+            if (files) {
+                for (let i = 0; i < files.length; i++) {
+                    if (files[i].type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const box = document.createElement('div');
+                            box.className = 'preview-box';
+                            box.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                            container.appendChild(box);
+                        }
+                        reader.readAsDataURL(files[i]);
+                    }
+                }
+            }
+        });
+
+        document.getElementById('video-upload').addEventListener('change', function(event) {
+            const container = document.getElementById('video-preview-container');
+            container.innerHTML = '';
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('video/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const box = document.createElement('div');
+                    box.className = 'preview-box';
+                    box.style.width = '180px'; 
+                    box.innerHTML = `<video src="${e.target.result}" controls></video>`;
+                    container.appendChild(box);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

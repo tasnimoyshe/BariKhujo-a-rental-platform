@@ -1,0 +1,241 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Settings" %} - BariKhujo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9fa; }
+        .input-field { width: 100%; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 0.75rem 1rem; border-radius: 0.75rem; font-size: 0.95rem; color: #1e293b; outline: none; transition: all 0.2s; }
+        .input-field:focus { background-color: #ffffff; border-color: #0f9d58; box-shadow: 0 0 0 4px rgba(15, 157, 88, 0.1); }
+        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; }
+        .file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        #crop-modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; padding: 1rem; }
+        #crop-modal.active { display: flex; }
+        .cropper-container-box { width: 100%; max-width: 500px; background: white; padding: 1.5rem; border-radius: 1rem; }
+        .img-container { max-height: 400px; width: 100%; margin-bottom: 1rem; background-color: #f3f4f6; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .img-container img { max-width: 100%; max-height: 100%; }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <!-- Navbar with NEW LOGO & Language Switcher -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+            <a href="{% url 'home' %}" class="flex items-center group cursor-pointer">
+                <img src="{% static 'images/logo.png' %}" alt="BariKhujo Logo" class="h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform duration-300">
+            </a>
+            <div class="flex items-center gap-4">
+                
+                <!-- Language Switcher -->
+                <form action="{% url 'set_language' %}" method="post" class="flex items-center">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                    <div class="relative group cursor-pointer">
+                        <select name="language" onchange="this.form.submit()" class="appearance-none bg-emerald-50 border border-emerald-100 text-[#0f9d58] text-sm font-bold rounded-xl focus:ring-2 focus:ring-[#0f9d58] focus:border-transparent block w-full py-1.5 pl-3 pr-8 cursor-pointer hover:bg-emerald-100 transition-colors outline-none shadow-sm">
+                            {% get_current_language as LANGUAGE_CODE %}
+                            {% get_available_languages as LANGUAGES %}
+                            {% for lang in LANGUAGES %}
+                                <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
+                                    {{ lang.1 }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#0f9d58]">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="h-5 w-px bg-gray-200 mx-1"></div>
+
+                <a href="{% url 'dashboard' %}" class="text-sm font-bold text-gray-600 hover:text-[#0f9d58] transition">{% trans "Back to Dashboard" %}</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8">
+        
+        <aside class="w-full md:w-64 shrink-0">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sticky top-24">
+                <nav class="space-y-1.5">
+                    <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        {% trans "Dashboard" %}
+                    </a>
+                    <a href="{% url 'settings' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-emerald-700 bg-emerald-50 rounded-xl transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        {% trans "Settings" %}
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="flex-1">
+            <div class="mb-6">
+                <h1 class="text-2xl font-extrabold text-gray-900">{% trans "Profile Settings" %}</h1>
+                <p class="text-sm font-medium text-gray-500 mt-1">{% trans "Update your personal and contact details." %}</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-6 sm:p-8">
+                
+                <form id="settings-form" method="POST" action="{% url 'settings' %}" enctype="multipart/form-data" class="space-y-6">
+                    {% csrf_token %}
+                    <input type="hidden" name="cropped_image_data" id="cropped_image_data">
+
+                    <!-- Profile Picture Upload Section -->
+                    <div class="flex flex-col sm:flex-row items-center gap-6 mb-8 pb-8 border-b border-gray-100">
+                        <div class="relative group cursor-pointer w-28 h-28 rounded-full border-4 border-emerald-50 shadow-md overflow-hidden bg-gray-100 flex items-center justify-center shrink-0">
+                            <img id="profile-preview" src="{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% endif %}" 
+                                 class="w-full h-full object-cover transition-opacity duration-300 {% if not profile.profile_picture %}hidden{% endif %}" alt="{% trans 'Profile Preview' %}">
+                            <span id="profile-initial" class="text-4xl font-extrabold text-[#0f9d58] {% if profile.profile_picture %}hidden{% endif %}">
+                                {{ request.user.first_name|make_list|first|default:request.user.username|make_list|first|upper }}
+                            </span>
+                            <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <svg class="w-6 h-6 text-white mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                                <span class="text-white text-[10px] font-bold uppercase tracking-wider">{% trans "Change" %}</span>
+                            </div>
+                            <input type="file" id="profile_picture" name="profile_picture" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        </div>
+                        <div class="text-center sm:text-left">
+                            <h3 class="text-lg font-bold text-gray-900 mb-1">{% trans "Profile Photo" %}</h3>
+                            <p class="text-sm text-gray-500 mb-3">{% trans "Upload a professional photo to build trust. JPG or PNG." %}</p>
+                            <div class="file-upload-wrapper">
+                                <label for="profile_picture" class="inline-block px-4 py-2 bg-emerald-50 text-[#0f9d58] text-sm font-bold rounded-lg cursor-pointer hover:bg-emerald-100 transition border border-emerald-100">
+                                    {% trans "Browse Files" %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{% trans "First Name" %}</label>
+                            <input type="text" name="first_name" value="{{ request.user.first_name }}" class="input-field" placeholder="{% trans 'Enter first name' %}">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{% trans "Last Name" %}</label>
+                            <input type="text" name="last_name" value="{{ request.user.last_name }}" class="input-field" placeholder="{% trans 'Enter last name' %}">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{% trans "Email Address" %}</label>
+                            <input type="email" name="email" value="{{ request.user.email }}" class="input-field" placeholder="{% trans 'your.email@example.com' %}">
+                        </div>
+                        
+                        <!-- Occupation Field -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{% trans "Occupation / Profession" %}</label>
+                            <input type="text" name="occupation" value="{% if profile.occupation %}{% trans profile.occupation %}{% endif %}" class="input-field" placeholder="{% trans 'e.g. Businessman, Teacher' %}">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{% trans "Phone Number" %}</label>
+                            <input type="text" name="phone_number" value="{{ profile.phone_number|default:'' }}" class="input-field" placeholder="{% trans 'e.g. 017XXXXXXXX' %}">
+                            <p class="text-[11px] text-gray-400 mt-1">{% trans "Renters will call this number." %}</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{% trans "WhatsApp Number" %}</label>
+                            <input type="text" name="whatsapp_number" value="{{ profile.whatsapp_number|default:'' }}" class="input-field" placeholder="{% trans 'e.g. 88017XXXXXXXX' %}">
+                            <p class="text-[11px] text-gray-400 mt-1">{% trans "Include country code (e.g. 880)." %}</p>
+                        </div>
+
+                        <!-- Facebook Link -->
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{% trans "Facebook Profile Link (Optional)" %}</label>
+                            <input type="url" name="facebook_link" value="{{ profile.facebook_link|default:'' }}" class="input-field" placeholder="{% trans 'https://facebook.com/yourprofile' %}">
+                            <p class="text-[11px] text-gray-400 mt-1">{% trans "Adds credibility to your profile." %}</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 mt-6 border-t border-gray-100 flex justify-end">
+                        <button type="submit" class="bg-[#0f9d58] text-white font-extrabold px-8 py-3 rounded-xl hover:bg-emerald-700 transition shadow-md">
+                            {% trans "Save Changes" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Image Cropping Modal -->
+    <div id="crop-modal">
+        <div class="cropper-container-box">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">{% trans "Crop Profile Picture" %}</h3>
+            <div class="img-container">
+                <img id="image-to-crop" src="">
+            </div>
+            <div class="flex justify-end gap-3 mt-4">
+                <button type="button" id="cancel-crop" class="px-4 py-2 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition">{% trans "Cancel" %}</button>
+                <button type="button" id="apply-crop" class="px-4 py-2 bg-[#0f9d58] text-white font-bold rounded-lg hover:bg-emerald-700 transition">{% trans "Apply Crop" %}</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script>
+        const fileInput = document.getElementById('profile_picture');
+        const cropModal = document.getElementById('crop-modal');
+        const imageToCrop = document.getElementById('image-to-crop');
+        const cancelBtn = document.getElementById('cancel-crop');
+        const applyBtn = document.getElementById('apply-crop');
+        const profilePreview = document.getElementById('profile-preview');
+        const profileInitial = document.getElementById('profile-initial');
+        const croppedInput = document.getElementById('cropped_image_data');
+        let cropper;
+
+        fileInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imageToCrop.src = event.target.result;
+                    cropModal.classList.add('active'); 
+                    
+                    if(cropper) { cropper.destroy(); }
+                    cropper = new Cropper(imageToCrop, {
+                        aspectRatio: 1, 
+                        viewMode: 1,
+                        dragMode: 'move',
+                        autoCropArea: 0.8,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: false,
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            cropModal.classList.remove('active');
+            if(cropper) cropper.destroy();
+            fileInput.value = ''; 
+        });
+
+        applyBtn.addEventListener('click', function() {
+            if(cropper){
+                const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+                const base64Image = canvas.toDataURL('image/jpeg');
+
+                profilePreview.src = base64Image;
+                profilePreview.classList.remove('hidden');
+                profileInitial.classList.add('hidden');
+                croppedInput.value = base64Image;
+                
+                cropModal.classList.remove('active');
+                cropper.destroy();
+            }
+        });
+    </script>
+</body>
+</html>

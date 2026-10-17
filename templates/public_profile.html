@@ -1,0 +1,218 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ host.first_name|default:host.username|title }}'s Profile - BariKhujo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fafafa; }
+        
+        /* Soft, elegant shadow for the main profile card */
+        .glass-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+        
+        /* Pinterest-style smooth floating property cards */
+        .property-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .property-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12);
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <!-- Premium Sticky Navbar -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-6">
+                    <!-- Updated Image Logo -->
+                    <a href="{% url 'home' %}" class="flex items-center group cursor-pointer">
+                        <img src="{% static 'images/logo.png' %}" alt="BariKhujo Logo" class="h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform duration-300">
+                    </a>
+                </div>
+                <div class="flex items-center gap-4">
+                    
+                    <!-- NEW: Language Switcher Form -->
+                    <form action="{% url 'set_language' %}" method="post" class="flex items-center">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                        <div class="relative group cursor-pointer">
+                            <select name="language" onchange="this.form.submit()" class="appearance-none bg-emerald-50 border border-emerald-100 text-[#0f9d58] text-sm font-bold rounded-xl focus:ring-2 focus:ring-[#0f9d58] focus:border-transparent block w-full py-1.5 pl-3 pr-8 cursor-pointer hover:bg-emerald-100 transition-colors outline-none shadow-sm">
+                                {% get_current_language as LANGUAGE_CODE %}
+                                {% get_available_languages as LANGUAGES %}
+                                {% for lang in LANGUAGES %}
+                                    <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
+                                        {{ lang.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#0f9d58]">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="hidden sm:block h-5 w-px bg-gray-200 mx-1"></div>
+
+                    <a href="{% url 'home' %}" class="text-sm font-bold text-gray-500 hover:text-gray-900 transition flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        {% trans "Back to Home" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        
+        <!-- Center-Aligned Elegant Host Profile -->
+        <div class="glass-card overflow-hidden mb-16">
+            <!-- Smooth Gradient Banner -->
+            <div class="h-44 w-full bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 relative">
+                <!-- Soft decorative element -->
+                <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(#0f9d58 1px, transparent 1px); background-size: 24px 24px;"></div>
+            </div>
+            
+            <div class="px-6 pb-12 text-center relative -mt-24">
+                
+                <!-- Profile Picture (Centered) -->
+                <div class="inline-block relative">
+                    <div class="w-40 h-40 rounded-full border-8 border-white bg-gray-100 shadow-md flex items-center justify-center overflow-hidden mx-auto z-10 relative">
+                        {% if host.profile.profile_picture %}
+                            <img src="{{ host.profile.profile_picture.url }}" alt="Profile" class="w-full h-full object-cover">
+                        {% else %}
+                            <span class="text-6xl font-extrabold text-[#0f9d58]">{{ host.first_name|make_list|first|default:host.username|make_list|first|upper }}</span>
+                        {% endif %}
+                    </div>
+                    {% if host.profile.is_verified %}
+                    <div class="absolute bottom-3 right-3 bg-blue-500 text-white p-1.5 rounded-full border-4 border-white z-20" title="Verified Host">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Host Name & Details -->
+                <div class="mt-4">
+                    <h1 class="text-3xl font-extrabold text-gray-900 mb-1 tracking-tight">
+                        {% if host.first_name or host.last_name %}
+                            {{ host.first_name|title }} {{ host.last_name|title }}
+                        {% else %}
+                            {{ host.username|title }}
+                        {% endif %}
+                    </h1>
+                    
+                    <!-- NEW: Occupation Field -->
+                    {% if host.profile.occupation %}
+                        <p class="text-base font-bold text-gray-400 uppercase tracking-widest mb-3">{% trans host.profile.occupation %}</p>
+                    {% endif %}
+                    
+                    <div class="flex flex-wrap items-center justify-center gap-3 text-sm font-medium text-gray-500 mb-8">
+                        <span class="bg-gray-50 px-3 py-1 rounded-full border border-gray-100">{% trans "Joined" %} {{ host.date_joined|date:"F Y" }}</span>
+                        <span class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full border border-emerald-100 font-bold">{{ total_listings }} {% trans "Active Listings" %}</span>
+                    </div>
+                    
+                    <!-- Clean Rounded Action Buttons -->
+                    <div class="flex flex-wrap justify-center gap-4">
+                        {% if host.profile.phone_number %}
+                        <a href="tel:{{ host.profile.phone_number }}" class="inline-flex items-center gap-2 bg-gray-900 text-white text-sm font-bold px-7 py-3.5 rounded-full hover:bg-gray-800 transition shadow-sm hover:shadow-lg transform hover:-translate-y-0.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                            {% trans "Call Host" %}
+                        </a>
+                        {% endif %}
+                        
+                        {% if host.profile.whatsapp_number %}
+                        <a href="https://wa.me/{{ host.profile.whatsapp_number }}" target="_blank" class="inline-flex items-center gap-2 bg-[#25D366] text-white text-sm font-bold px-7 py-3.5 rounded-full hover:bg-[#20b858] transition shadow-sm hover:shadow-lg transform hover:-translate-y-0.5">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            {% trans "Message" %}
+                        </a>
+                        {% endif %}
+
+                        <!-- NEW: Facebook Link Button -->
+                        {% if host.profile.facebook_link %}
+                        <a href="{{ host.profile.facebook_link }}" target="_blank" class="inline-flex items-center gap-2 bg-[#1877F2] text-white text-sm font-bold px-7 py-3.5 rounded-full hover:bg-[#166fe5] transition shadow-sm hover:shadow-lg transform hover:-translate-y-0.5">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            Facebook
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Title -->
+        <h2 class="text-2xl font-extrabold text-gray-900 mb-8 tracking-tight text-center sm:text-left">{% trans "Listings by this Host" %}</h2>
+        
+        <!-- Modern, Minimal Property Grid -->
+        {% if host_properties %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for property in host_properties %}
+                <div class="property-card group flex flex-col p-4">
+                    
+                    <!-- Clean Image Container -->
+                    <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 mb-5">
+                        {% if property.image %}
+                            <img src="{{ property.image.url }}" alt="{{ property.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Floating Badge -->
+                        <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-gray-900 text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                            {% trans "For" %} {% if property.listing_type %}{% trans property.listing_type %}{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Minimal Details Area -->
+                    <div class="px-2 flex-1 flex flex-col">
+                        <h3 class="text-lg font-bold text-gray-900 line-clamp-1 mb-1">{{ property.title|title }}</h3>
+                        
+                        <p class="text-sm text-gray-500 mb-4 flex items-center gap-1.5 line-clamp-1">
+                            <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                            {{ property.location }}, {{ property.district }}
+                        </p>
+                        
+                        <div class="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{% trans "Price" %}</p>
+                                <p class="text-xl font-extrabold text-[#0f9d58]">৳ {{ property.rent_or_price }}</p>
+                            </div>
+                            
+                            <!-- Elegant Details Button -->
+                            <a href="{% url 'property_details' property.id %}" class="w-10 h-10 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-[#0f9d58] hover:text-white transition-colors group-hover:bg-[#0f9d58] group-hover:text-white">
+                                <svg class="w-5 h-5 transform -rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <h3 class="text-lg font-extrabold text-gray-900">{% trans "No active listings" %}</h3>
+                <p class="text-sm text-gray-500 mt-1">{% trans "This host doesn't have any properties published right now." %}</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

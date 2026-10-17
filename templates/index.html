@@ -1,200 +1,353 @@
+{% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BashaKhuji - Search & Map</title>
+    <title>{% trans "BariKhujo - Find Your Perfect Property" %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #F9FAFB; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9fa; }
+        .hero-pattern {
+            background-color: #0f9d58;
+            background-image: radial-gradient(#14b868 1px, transparent 1px), radial-gradient(#14b868 1px, transparent 1px);
+            background-size: 32px 32px;
+            background-position: 0 0, 16px 16px;
+        }
     </style>
 </head>
-<body class="overflow-hidden h-screen flex flex-col antialiased">
-    
-    <!-- Top Navigation & Advanced Search Form -->
-    <nav class="bg-white shadow-sm border-b border-gray-200 z-50 shrink-0">
-        <form method="GET" action="{% url 'home' %}" class="w-full">
-            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 h-20 flex justify-between items-center">
-                <a href="{% url 'home' %}" class="text-2xl font-bold text-emerald-600 flex-shrink-0">BashaKhuji</a>
+<body class="antialiased text-gray-800">
+
+    <!-- Premium Sticky Navbar -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
                 
-                <div class="hidden md:flex flex-1 max-w-2xl mx-8">
-                    <div class="flex w-full items-center bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md transition duration-200 p-1 pl-6 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
-                        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search location or title (e.g., Mirpur)..." class="w-full outline-none font-semibold text-sm text-gray-800 pr-4 bg-transparent">
-                        <button type="submit" class="ml-auto bg-emerald-600 w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-emerald-700 transition shrink-0 cursor-pointer z-10">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </button>
-                    </div>
+                <!-- Left side: Logo & Home -->
+                <div class="flex items-center gap-6">
+                    <a href="{% url 'home' %}" class="flex items-center group cursor-pointer">
+                        <img src="{% static 'images/logo.png' %}" alt="BariKhujo Logo" class="h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform duration-300">
+                    </a>
                 </div>
-                
-                <div class="flex items-center space-x-4 flex-shrink-0">
-                    <a href="{% url 'post_property' %}" class="font-semibold text-sm text-gray-600 hover:text-emerald-600 transition hidden lg:block">Post Property</a>
+
+                <!-- Right side: Auth / Profile -->
+                <div class="flex items-center gap-3 sm:gap-5">
                     
-                    {% if user.is_authenticated %}
-                        <div class="hidden lg:flex items-center gap-3 border-l border-gray-200 pl-4 ml-2">
-                            <a href="{% url 'dashboard' %}" class="text-sm font-bold text-gray-800 hover:text-emerald-600 transition cursor-pointer">Hi, {{ user.username }}</a>
-                            <a href="{% url 'logout' %}" class="text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">Logout</a>
+                    <!-- NEW: Language Switcher Form -->
+                    <form action="{% url 'set_language' %}" method="post" class="flex items-center">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                        <div class="relative group cursor-pointer">
+                            <select name="language" onchange="this.form.submit()" class="appearance-none bg-emerald-50 border border-emerald-100 text-[#0f9d58] text-sm font-bold rounded-xl focus:ring-2 focus:ring-[#0f9d58] focus:border-transparent block w-full py-2 pl-3 pr-8 cursor-pointer hover:bg-emerald-100 transition-colors outline-none shadow-sm">
+                                {% get_current_language as LANGUAGE_CODE %}
+                                {% get_available_languages as LANGUAGES %}
+                                {% for lang in LANGUAGES %}
+                                    <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
+                                        {{ lang.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <!-- Custom Dropdown Icon -->
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#0f9d58]">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Divider -->
+                    <div class="hidden sm:block h-6 w-px bg-gray-200 mx-1"></div>
+
+                    <!-- Existing Auth / Profile -->
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'post_property' %}" class="hidden sm:inline-flex items-center justify-center px-4 py-2 text-sm font-bold text-[#0f9d58] bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition">
+                            {% trans "+ Add Property" %}
+                        </a>
+                        
+                        <div class="h-6 w-px bg-gray-200 mx-1"></div>
+                        <!-- Profile Dropdown Container -->
+                        <div class="relative">
+                            <div id="profile-menu-btn" class="flex items-center gap-2 cursor-pointer rounded-full pl-1 pr-2 py-1 hover:bg-gray-50 transition-colors">
+                                
+                                <div class="w-8 h-8 rounded-full bg-[#0f9d58] border-2 border-white shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                                    {% if request.user.profile.profile_picture %}
+                                        <img src="{{ request.user.profile.profile_picture.url }}" alt="{% trans 'Profile' %}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <span class="text-xs font-bold text-white">{{ request.user.first_name|make_list|first|default:request.user.username|make_list|first|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <span class="text-sm font-bold text-gray-700 hidden sm:block">
+                                    {% if request.user.first_name or request.user.last_name %}
+                                        {{ request.user.first_name|title }} {{ request.user.last_name|title }}
+                                    {% else %}
+                                        {{ request.user.username|title }}
+                                    {% endif %}
+                                </span>
+                                
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+
+                            <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50">
+                                <a href="{% url 'dashboard' %}" class="block px-4 py-2.5 text-sm font-medium text-[#0f9d58] hover:bg-emerald-50 transition">{% trans "Dashboard" %}</a>
+                                <a href="{% url 'settings' %}" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">{% trans "Settings" %}</a>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <a href="{% url 'logout' %}" class="block px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition">{% trans "Logout" %}</a>
+                            </div>
                         </div>
                     {% else %}
-                        <div class="hidden lg:flex items-center gap-3 border-l border-gray-200 pl-4 ml-2">
-                            <a href="{% url 'login' %}" class="font-semibold text-sm text-gray-600 hover:text-emerald-600 transition">Log in</a>
-                            <a href="{% url 'register' %}" class="bg-emerald-600 text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-emerald-700 transition shadow-sm">Sign up</a>
-                        </div>
+                        <a href="{% url 'login' %}" class="text-sm font-bold text-gray-600 hover:text-[#0f9d58] transition px-2">{% trans "Login" %}</a>
+                        <a href="{% url 'register' %}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-[#0f9d58] rounded-lg shadow-md hover:bg-emerald-700 transition">{% trans "Sign Up" %}</a>
                     {% endif %}
-                    
-                    <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center border-2 border-white shadow-sm cursor-pointer ml-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    </div>
                 </div>
             </div>
-            
-            <!-- Advanced Filters Row -->
-            <div class="border-t border-gray-100 bg-white">
-                <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 overflow-x-auto custom-scrollbar">
-                    
-                    <select name="tenant" class="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-full focus:border-emerald-500 block px-4 py-1.5 outline-none font-medium cursor-pointer hover:bg-gray-100 transition shrink-0">
-                        <option value="">Family / Bachelor</option>
-                        <option value="Family" {% if request.GET.tenant == 'Family' %}selected{% endif %}>Family</option>
-                        <option value="Bachelor" {% if request.GET.tenant == 'Bachelor' %}selected{% endif %}>Bachelor</option>
-                        <option value="Any" {% if request.GET.tenant == 'Any' %}selected{% endif %}>Any</option>
-                    </select>
-
-                    <div class="flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-1.5 hover:bg-gray-100 transition focus-within:border-emerald-500 shrink-0">
-                        <span class="text-sm font-medium text-gray-700 mr-2">Rent: ৳</span>
-                        <input type="number" name="min_rent" value="{{ request.GET.min_rent }}" min="2000" step="500" class="bg-transparent w-16 text-sm text-gray-900 outline-none font-bold text-center" placeholder="Min">
-                        <span class="text-sm text-gray-400 mx-1">-</span>
-                        <input type="number" name="max_rent" value="{{ request.GET.max_rent }}" min="2000" step="500" class="bg-transparent w-16 text-sm text-gray-900 outline-none font-bold text-center" placeholder="Max">
-                    </div>
-
-                    <div class="flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-1.5 hover:bg-gray-100 transition focus-within:border-emerald-500 shrink-0">
-                        <span class="text-sm font-medium text-gray-700 mr-2">Beds:</span>
-                        <input type="number" name="beds" value="{{ request.GET.beds }}" min="1" class="bg-transparent w-8 text-sm text-gray-900 outline-none font-bold text-center" placeholder="Any">
-                    </div>
-
-                    <div class="flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-1.5 hover:bg-gray-100 transition focus-within:border-emerald-500 shrink-0">
-                        <span class="text-sm font-medium text-gray-700 mr-2">Baths:</span>
-                        <input type="number" name="baths" value="{{ request.GET.baths }}" min="1" class="bg-transparent w-8 text-sm text-gray-900 outline-none font-bold text-center" placeholder="Any">
-                    </div>
-
-                    <label class="flex items-center cursor-pointer bg-gray-50 border border-gray-200 rounded-full px-4 py-1.5 hover:bg-gray-100 transition has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-200 has-[:checked]:text-emerald-700 text-sm font-medium text-gray-700 shrink-0">
-                        <input type="checkbox" name="pet" value="true" class="hidden" {% if request.GET.pet %}checked{% endif %}>
-                        <span>🐾 Pet Friendly</span>
-                    </label>
-
-                    <button type="submit" class="px-5 py-1.5 bg-gray-900 text-white text-sm font-bold rounded-full hover:bg-gray-800 transition shadow-sm shrink-0 ml-2">Filter</button>
-                    <a href="{% url 'home' %}" class="px-4 py-1.5 text-gray-400 hover:text-red-500 text-sm font-medium transition underline underline-offset-2 shrink-0">Clear</a>
-                </div>
-            </div>
-        </form>
+        </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="flex flex-1 overflow-hidden">
-        <!-- Left Side: List View -->
-        <div class="w-full lg:w-[55%] xl:w-[50%] flex flex-col bg-gray-50 border-r border-gray-200">
-            <div class="p-6 overflow-y-auto custom-scrollbar h-full">
-                
-                <h1 class="text-xl font-bold text-gray-900 mb-1">Properties found</h1>
-                <p class="text-sm text-gray-500 mb-6">Reviewing rentals matching your preferences</p>
-                
-                <div class="flex flex-col gap-6">
-                    {% for property in properties %}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col sm:flex-row hover:shadow-md transition group cursor-pointer">
-                        <div class="w-full sm:w-2/5 h-56 sm:h-auto relative overflow-hidden shrink-0">
-                            {% if property.image %}
-                                <img src="{{ property.image.url }}" alt="{{ property.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                            {% else %}
-                                <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&w=600&q=80" alt="Default Flat" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                            {% endif %}
-                            
-                            {% if property.is_available %}
-                                <div class="absolute top-3 left-3 bg-emerald-100/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-emerald-700 shadow-sm">Available</div>
-                            {% else %}
-                                <div class="absolute top-3 left-3 bg-red-100/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-red-700 shadow-sm">Rented</div>
-                            {% endif %}
+    <!-- Hero Section with Search -->
+    <div class="hero-pattern py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+                {% trans "Find Your Perfect Home in Bangladesh" %}
+            </h1>
+            <p class="text-emerald-50 text-lg font-medium mb-10 max-w-2xl mx-auto">
+                {% trans "Discover flats, houses, and commercial spaces for rent or sale. The easiest way to find your next property." %}
+            </p>
+
+            <!-- Advanced Search Form -->
+            <form method="GET" action="{% url 'home' %}" class="bg-white p-5 rounded-2xl shadow-2xl mx-auto mt-8 max-w-5xl">
+                <!-- Primary Search Row -->
+                <div class="flex flex-col md:flex-row gap-3">
+                    <!-- Keyword/Location -->
+                    <div class="flex-1 relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400 group-focus-within:text-[#0f9d58] transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
                         </div>
-                        <div class="p-5 flex flex-col justify-between w-full">
-                            <div>
-                                <div class="flex justify-between items-start mb-1">
-                                    <p class="text-sm text-gray-500">{{ property.location }}</p>
-                                    
-                                    {% if property.tenant_type == 'Bachelor' %}
-                                        <span class="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded border border-purple-100">Bachelor</span>
-                                    {% elif property.tenant_type == 'Any' %}
-                                        <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded border border-gray-200">Anyone</span>
-                                    {% else %}
-                                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">Family</span>
-                                    {% endif %}
-                                </div>
-                                <h3 class="font-bold text-gray-900 text-lg leading-tight mb-2 group-hover:text-emerald-600 transition">{{ property.title }}</h3>
-                                <div class="flex flex-wrap items-center text-sm text-gray-500 gap-3 mb-4">
-                                    <span class="bg-gray-50 px-2 py-1 rounded-md border border-gray-100">🛏️ {{ property.bedrooms }} Beds</span>
-                                    <span class="bg-gray-50 px-2 py-1 rounded-md border border-gray-100">🚿 {{ property.bathrooms }} Baths</span>
-                                    {% if property.pet_allowed %}<span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md border border-emerald-100 font-medium">🐾 Pets OK</span>{% endif %}
-                                </div>
-                            </div>
-                            <div class="flex justify-between items-end border-t border-gray-100 pt-3">
-                                <div>
-                                    <p class="text-xs text-gray-400 font-medium uppercase tracking-wide">Rent per month</p>
-                                    <p class="font-extrabold text-gray-900 text-xl">৳ {{ property.rent }}</p>
-                                </div>
-                                <a href="{% url 'property_details' property.id %}" class="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold rounded-lg text-sm hover:bg-emerald-100 transition inline-block text-center">Details</a>
-                            </div>
+                        <input type="text" name="q" placeholder="{% trans 'Search by Area, City, or Keyword...' %}" value="{{ request.GET.q|default:'' }}" class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#0f9d58] outline-none transition text-sm font-medium text-gray-800 placeholder-gray-400">
+                    </div>
+                    
+                    <!-- Listing Type -->
+                    <div class="w-full md:w-40 relative group">
+                        <select name="listing_type" class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#0f9d58] outline-none transition text-sm font-medium text-gray-800 appearance-none cursor-pointer">
+                            <option value="">{% trans "Any Status" %}</option>
+                            <option value="Rent" {% if request.GET.listing_type == 'Rent' %}selected{% endif %}>{% trans "For Rent" %}</option>
+                            <option value="Sale" {% if request.GET.listing_type == 'Sale' %}selected{% endif %}>{% trans "For Sale" %}</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
-                    {% empty %}
-                    <div class="text-center py-10">
-                        <div class="text-4xl mb-3">🔍</div>
-                        <p class="text-gray-900 font-bold text-lg mb-1">No matches found</p>
-                        <p class="text-gray-500 text-sm">Try adjusting your filters or search terms.</p>
-                        <a href="{% url 'home' %}" class="mt-4 inline-block px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium hover:bg-gray-200 transition">Clear all filters</a>
+
+                    <!-- Property Type -->
+                    <div class="w-full md:w-48 relative group">
+                        <select name="property_type" class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#0f9d58] outline-none transition text-sm font-medium text-gray-800 appearance-none cursor-pointer">
+                            <option value="">{% trans "Any Property Type" %}</option>
+                            <option value="Apartment" {% if request.GET.property_type == 'Apartment' %}selected{% endif %}>{% trans "Apartment" %}</option>
+                            <option value="House" {% if request.GET.property_type == 'House' %}selected{% endif %}>{% trans "House / Villa" %}</option>
+                            <option value="Sublet Room" {% if request.GET.property_type == 'Sublet Room' %}selected{% endif %}>{% trans "Sublet Room" %}</option>
+                            <option value="Commercial" {% if request.GET.property_type == 'Commercial' %}selected{% endif %}>{% trans "Commercial Space" %}</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
                     </div>
-                    {% endfor %}
 
-                    <!-- Pagination Component -->
-                    {% if properties.has_other_pages %}
-                    <div class="mt-4 flex justify-center pb-8">
-                        <nav class="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-200">
-                            
-                            {% if properties.has_previous %}
-                                <a href="?page={{ properties.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="px-3 py-1.5 text-sm font-bold text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">Prev</a>
-                            {% else %}
-                                <span class="px-3 py-1.5 text-sm font-bold text-gray-300 cursor-not-allowed">Prev</span>
-                            {% endif %}
-
-                            <div class="flex gap-1 border-x border-gray-100 px-3">
-                                {% for num in properties.paginator.page_range %}
-                                    {% if properties.number == num %}
-                                        <span class="w-8 h-8 flex items-center justify-center bg-emerald-600 text-white rounded-lg text-sm font-bold shadow-sm">{{ num }}</span>
-                                    {% else %}
-                                        <a href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-bold transition">{{ num }}</a>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-
-                            {% if properties.has_next %}
-                                <a href="?page={{ properties.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="px-3 py-1.5 text-sm font-bold text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">Next</a>
-                            {% else %}
-                                <span class="px-3 py-1.5 text-sm font-bold text-gray-300 cursor-not-allowed">Next</span>
-                            {% endif %}
-                            
-                        </nav>
-                    </div>
-                    {% endif %}
-
+                    <!-- Search Button -->
+                    <button type="submit" class="bg-[#0f9d58] text-white font-extrabold px-8 py-3.5 rounded-xl hover:bg-emerald-700 transition shadow-md w-full md:w-auto flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        {% trans "Search" %}
+                    </button>
                 </div>
-            </div>
-        </div>
 
-        <!-- Right Side: Map View -->
-        <div class="hidden lg:block lg:w-[45%] xl:w-[50%] relative bg-gray-200">
-            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Map" class="w-full h-full object-cover opacity-80 mix-blend-overlay">
+                <!-- Advanced Filters Toggle Button -->
+                <div class="mt-4 flex justify-center md:justify-start">
+                    <button type="button" onclick="document.getElementById('advanced-filters').classList.toggle('hidden');" class="text-sm font-bold text-gray-500 hover:text-[#0f9d58] transition flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-emerald-50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        {% trans "More Advanced Filters" %}
+                    </button>
+                </div>
+
+                <!-- Secondary Filters Row (Hidden by default) -->
+                <div id="advanced-filters" class="hidden mt-4 pt-5 border-t border-gray-100 text-left">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">{% trans "Min Price" %}</label>
+                            <input type="number" name="min_price" value="{{ request.GET.min_price|default:'' }}" placeholder="{% trans 'e.g. 5000' %}" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:border-[#0f9d58] outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">{% trans "Max Price" %}</label>
+                            <input type="number" name="max_price" value="{{ request.GET.max_price|default:'' }}" placeholder="{% trans 'e.g. 25000' %}" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:border-[#0f9d58] outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">{% trans "Tenant" %}</label>
+                            <select name="tenant" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:border-[#0f9d58] outline-none">
+                                <option value="">{% trans "Any" %}</option>
+                                <option value="Family" {% if request.GET.tenant == 'Family' %}selected{% endif %}>{% trans "Family" %}</option>
+                                <option value="Bachelor - Male" {% if request.GET.tenant == 'Bachelor - Male' %}selected{% endif %}>{% trans "Bachelor (Male)" %}</option>
+                                <option value="Bachelor - Female" {% if request.GET.tenant == 'Bachelor - Female' %}selected{% endif %}>{% trans "Bachelor (Female)" %}</option>
+                                <option value="Small Family / Couple" {% if request.GET.tenant == 'Small Family / Couple' %}selected{% endif %}>{% trans "Small Family" %}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">{% trans "Bedrooms" %}</label>
+                            <select name="beds" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:border-[#0f9d58] outline-none">
+                                <option value="">{% trans "Any" %}</option>
+                                <option value="1" {% if request.GET.beds == '1' %}selected{% endif %}>{% trans "1 Bed" %}</option>
+                                <option value="2" {% if request.GET.beds == '2' %}selected{% endif %}>{% trans "2 Beds" %}</option>
+                                <option value="3" {% if request.GET.beds == '3' %}selected{% endif %}>{% trans "3 Beds" %}</option>
+                                <option value="4" {% if request.GET.beds == '4' %}selected{% endif %}>{% trans "4 Beds" %}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">{% trans "Bathrooms" %}</label>
+                            <select name="baths" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:border-[#0f9d58] outline-none">
+                                <option value="">{% trans "Any" %}</option>
+                                <option value="1" {% if request.GET.baths == '1' %}selected{% endif %}>{% trans "1 Bath" %}</option>
+                                <option value="2" {% if request.GET.baths == '2' %}selected{% endif %}>{% trans "2 Baths" %}</option>
+                                <option value="3" {% if request.GET.baths == '3' %}selected{% endif %}>{% trans "3 Baths" %}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-5 pt-4 border-t border-gray-100 flex flex-wrap gap-x-6 gap-y-3">
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-600 cursor-pointer hover:text-[#0f9d58] transition">
+                            <input type="checkbox" name="gas_line" class="w-4 h-4 accent-[#0f9d58]" {% if request.GET.gas_line == 'on' %}checked{% endif %}>
+                            {% trans "Line Gas" %}
+                        </label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-600 cursor-pointer hover:text-[#0f9d58] transition">
+                            <input type="checkbox" name="lift" class="w-4 h-4 accent-[#0f9d58]" {% if request.GET.lift == 'on' %}checked{% endif %}>
+                            {% trans "Lift / Elevator" %}
+                        </label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-600 cursor-pointer hover:text-[#0f9d58] transition">
+                            <input type="checkbox" name="parking" class="w-4 h-4 accent-[#0f9d58]" {% if request.GET.parking == 'on' %}checked{% endif %}>
+                            {% trans "Parking Space" %}
+                        </label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-600 cursor-pointer hover:text-[#0f9d58] transition">
+                            <input type="checkbox" name="generator" class="w-4 h-4 accent-[#0f9d58]" {% if request.GET.generator == 'on' %}checked{% endif %}>
+                            {% trans "Generator Backup" %}
+                        </label>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
+
+    <!-- Main Content: Property Listings -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-extrabold text-gray-900">
+                {% if request.GET.q %}{% trans "Search Results" %}{% else %}{% trans "Latest Properties" %}{% endif %}
+            </h2>
+            <span class="text-sm font-bold text-[#0f9d58] bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                {{ properties.paginator.count }} {% trans "Found" %}
+            </span>
+        </div>
+
+        {% if properties %}
+            <!-- Property Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for property in properties %}
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col">
+                    
+                    <!-- Property Image & Save Button -->
+                    <div class="relative h-56 overflow-hidden bg-gray-100">
+                        {% if property.image %}
+                            <img src="{{ property.image.url }}" alt="{{ property.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Badge (Rent/Sale) -->
+                        <div class="absolute top-3 left-3 bg-white/90 backdrop-blur text-gray-900 text-[10px] font-extrabold px-2.5 py-1 rounded uppercase tracking-wider shadow-sm">
+                            {% trans "For" %} {{ property.listing_type }}
+                        </div>
+
+                        <!-- ** NEW: Heart / Save Button ** -->
+                        {% if request.user.is_authenticated %}
+                            <a href="{% url 'toggle_favorite' property.id %}" class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 shadow-sm {% if request.user in property.favorites.all %}bg-red-50 text-red-500 hover:bg-red-100{% else %}bg-white/80 text-gray-500 hover:bg-white hover:text-red-500{% endif %}">
+                                <svg class="w-5 h-5 {% if request.user in property.favorites.all %}fill-current{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Property Info -->
+                    <div class="p-5 flex flex-col flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-extrabold text-gray-900 line-clamp-1 flex-1 pr-2" title="{{ property.title }}">{{ property.title }}</h3>
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 flex items-center gap-1.5 mb-4">
+                            <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                            <span class="truncate">{{ property.location }}, {{ property.district }}</span>
+                        </p>
+
+                        <!-- Key Features -->
+                        <div class="flex items-center gap-4 text-xs font-bold text-gray-600 mb-4 pb-4 border-b border-gray-100">
+                            <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">🛏️ {{ property.bedrooms }}</div>
+                            <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">🚿 {{ property.bathrooms }}</div>
+                            <div class="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md truncate">🏢 {{ property.property_type }}</div>
+                        </div>
+
+                        <!-- Price & Action -->
+                        <div class="mt-auto flex items-center justify-between">
+                            <div>
+                                <p class="text-[0.7rem] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{% trans "Price" %}</p>
+                                <p class="text-xl font-extrabold text-[#0f9d58]">৳ {{ property.rent_or_price }}</p>
+                            </div>
+                            <a href="{% url 'property_details' property.id %}" class="bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-[#0f9d58] transition-colors shadow-sm">{% trans "Details" %}</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination (Dynamic & Filter Preserved) -->
+            {% if properties.has_other_pages %}
+            <div class="mt-12 flex justify-center">
+                <nav class="inline-flex rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    {% if properties.has_previous %}
+                        <a href="?page={{ properties.previous_page_number }}{% if filter_string %}&{{ filter_string }}{% endif %}" class="px-4 py-2 bg-white text-gray-500 hover:bg-gray-50 hover:text-emerald-600 font-bold text-sm transition">{% trans "Prev" %}</a>
+                    {% endif %}
+                    <span class="px-4 py-2 bg-emerald-50 text-emerald-700 font-extrabold text-sm border-x border-gray-100">{% trans "Page" %} {{ properties.number }} {% trans "of" %} {{ properties.paginator.num_pages }}</span>
+                    {% if properties.has_next %}
+                        <a href="?page={{ properties.next_page_number }}{% if filter_string %}&{{ filter_string }}{% endif %}" class="px-4 py-2 bg-white text-gray-500 hover:bg-gray-50 hover:text-emerald-600 font-bold text-sm transition">{% trans "Next" %}</a>
+                    {% endif %}
+                </nav>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <!-- No Results Found -->
+            <div class="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-extrabold text-gray-900">{% trans "No properties found" %}</h3>
+                <p class="text-gray-500 mt-2">{% trans "Try adjusting your search filters or check back later." %}</p>
+                <a href="{% url 'home' %}" class="inline-block mt-6 px-6 py-2 bg-[#0f9d58] text-white font-bold rounded-lg hover:bg-emerald-700 transition">{% trans "Clear Filters" %}</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Script for Dropdown -->
+    <script>
+        const profileBtn = document.getElementById('profile-menu-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', (e) => {
+                profileDropdown.classList.toggle('hidden');
+                e.stopPropagation();
+            });
+            document.addEventListener('click', (e) => {
+                if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+                    profileDropdown.classList.add('hidden');
+                }
+            });
+        }
+    </script>
 </body>
 </html>

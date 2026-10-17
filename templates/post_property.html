@@ -1,13 +1,14 @@
+{% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>List Your Property - BashaKhuji</title>
+    <title>{% if property %}{% trans "Edit Your Property" %}{% else %}{% trans "List Your Property" %}{% endif %} - BariKhujo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Choices.js CSS & JS for Advanced Searchable Dropdowns -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
@@ -26,33 +27,16 @@
             transition: all 0.2s;
             font-weight: 500;
         }
-        .minimal-input:focus {
-            border-bottom-color: #0f9d58;
-            box-shadow: 0 1px 0 0 #0f9d58;
-        }
+        .minimal-input:focus { border-bottom-color: #0f9d58; box-shadow: 0 1px 0 0 #0f9d58; }
         
         select.minimal-input {
             appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right center;
-            background-size: 1em;
-            padding-right: 1.5rem;
-            cursor: pointer;
+            background-repeat: no-repeat; background-position: right center; background-size: 1em; padding-right: 1.5rem; cursor: pointer;
         }
 
-        /* Choices.js Minimal Aesthetic Overrides */
         .choices[data-type*="select-one"] .choices__inner {
-            background-color: transparent;
-            border: none;
-            border-bottom: 1px solid #e5e7eb;
-            border-radius: 0;
-            padding: 0.2rem 0;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #1f2937;
-            transition: all 0.2s;
-            min-height: auto;
+            background-color: transparent; border: none; border-bottom: 1px solid #e5e7eb; border-radius: 0; padding: 0.2rem 0; font-size: 0.95rem; font-weight: 600; color: #1f2937; transition: all 0.2s; min-height: auto;
         }
         .choices.is-focused .choices__inner { border-bottom-color: #0f9d58; box-shadow: 0 1px 0 0 #0f9d58; }
         .choices__list--dropdown { border-radius: 0.75rem; border: 1px solid #f3f4f6; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); padding: 0.5rem; z-index: 50; }
@@ -70,346 +54,411 @@
 </head>
 <body class="antialiased">
 
+    <!-- Premium Sticky Navbar -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                
+                <!-- Left side: Logo & Home -->
+                <div class="flex items-center gap-6">
+                    <a href="{% url 'home' %}" class="flex items-center group cursor-pointer">
+                        <img src="{% static 'images/logo.png' %}" alt="BariKhujo Logo" class="h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform duration-300">
+                    </a>
+                </div>
+
+                <!-- Right side: Notifications & Profile -->
+                <div class="flex items-center gap-3 sm:gap-5">
+                    
+                    <!-- Language Switcher Form -->
+                    <form action="{% url 'set_language' %}" method="post" class="flex items-center">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                        <div class="relative group cursor-pointer">
+                            <select name="language" onchange="this.form.submit()" class="appearance-none bg-emerald-50 border border-emerald-100 text-[#0f9d58] text-sm font-bold rounded-xl focus:ring-2 focus:ring-[#0f9d58] focus:border-transparent block w-full py-1.5 pl-3 pr-8 cursor-pointer hover:bg-emerald-100 transition-colors outline-none shadow-sm">
+                                {% get_current_language as LANGUAGE_CODE %}
+                                {% get_available_languages as LANGUAGES %}
+                                {% for lang in LANGUAGES %}
+                                    <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
+                                        {{ lang.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#0f9d58]">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Notification Bell -->
+                    <button class="relative p-2 text-gray-400 hover:text-[#0f9d58] transition rounded-full hover:bg-emerald-50 focus:outline-none hidden sm:block">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <!-- Red Dot -->
+                        <span class="absolute top-1.5 right-1.5 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+                    </button>
+
+                    <!-- Divider -->
+                    <div class="h-6 w-px bg-gray-200 mx-1"></div>
+
+                    <!-- Profile Dropdown Container -->
+                    <div class="relative">
+                        <!-- Profile Trigger Button -->
+                        <div id="profile-menu-btn" class="flex items-center gap-2 cursor-pointer rounded-full pl-1 pr-2 py-1 hover:bg-gray-50 transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-[#0f9d58] border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
+                                {% if request.user.profile.profile_picture %}
+                                    <img src="{{ request.user.profile.profile_picture.url }}" alt="{% trans 'Profile' %}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <span class="text-xs font-bold text-white">{% if request.user.is_authenticated %}{{ request.user.username|make_list|first|upper }}{% else %}TO{% endif %}</span>
+                                {% endif %}
+                            </div>
+                            <span class="text-sm font-bold text-gray-700 hidden sm:block">
+                                {% if request.user.first_name or request.user.last_name %}
+                                    {{ request.user.first_name|title }} {{ request.user.last_name|title }}
+                                {% else %}
+                                    {{ request.user.username|title }}
+                                {% endif %}
+                            </span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+
+                        <!-- Dropdown Menu -->
+                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50">
+                            <a href="{% url 'dashboard' %}" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">{% trans "Dashboard" %}</a>
+                            <a href="{% url 'settings' %}" class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">{% trans "Settings" %}</a>
+                            <div class="border-t border-gray-100 my-1"></div>
+                            <a href="{% url 'logout' %}" class="block px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition">{% trans "Logout" %}</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <div class="max-w-[1000px] mx-auto py-8 px-4 sm:px-6">
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-visible pb-10">
             
             <div class="bg-[#0f9d58] px-8 sm:px-12 py-10 text-white rounded-t-2xl">
-                <h1 class="text-3xl font-extrabold mb-2">List Your Property</h1>
-                <p class="text-emerald-50 text-sm font-medium">Add details, upload photos, and find the perfect tenant quickly.</p>
+                <h1 class="text-3xl font-extrabold mb-2">{% if property %}{% trans "Edit Your Property" %}{% else %}{% trans "List Your Property" %}{% endif %}</h1>
+                <p class="text-emerald-50 text-sm font-medium">{% if property %}{% trans "Update details and find the perfect tenant quickly." %}{% else %}{% trans "Add details, upload photos, and find the perfect tenant quickly." %}{% endif %}</p>
             </div>
 
             <form method="POST" enctype="multipart/form-data" class="px-8 sm:px-12 pt-10" id="propertyForm">
                 {% csrf_token %}
 
-                <!-- Title -->
+                <!-- Title (Mandatory) -->
                 <div class="mb-10">
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Title</label>
-                    <input type="text" name="title" required placeholder="e.g. Beautiful 2 Bed Apartment in Mirpur" class="minimal-input text-lg">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{% trans "Title" %} <span class="text-red-500 ml-0.5">*</span></label>
+                    <input type="text" name="title" value="{{ property.title|default:'' }}" required placeholder="{% trans 'e.g. Beautiful 2 Bed Apartment in Mirpur' %}" class="minimal-input text-lg focus:border-emerald-500">
                 </div>
 
-                <!-- Location Details (Dynamic, Searchable & Minimal) -->
-                <div class="mb-8">
+                <!-- Location Details -->
+                <div class="mb-8 border-b border-gray-100 pb-10">
                     <h3 class="flex items-center gap-2 text-[0.95rem] font-extrabold text-gray-900 mb-6">
                         <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Property Location
+                        {% trans "Property Location" %}
                     </h3>
                     
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6 mb-6">
+                        <div>
+                            <label class="block text-[0.7rem] font-bold text-gray-500 uppercase tracking-widest mb-1">{% trans "District" %} <span class="text-red-500 text-sm ml-0.5">*</span></label>
+                            <select name="district" id="district-select" required>
+                                <option value="" disabled selected>{% trans "Search district..." %}</option>
+                            </select>
+                        </div>
+                        
+                        <!-- SMART LOCATION INPUT -->
+                        <div>
+                            <label class="block text-[0.7rem] font-bold text-gray-500 uppercase tracking-widest mb-1">{% trans "Area / Location" %} <span class="text-red-500 text-sm ml-0.5">*</span></label>
+                            <input type="text" name="location" id="area-input" list="area-suggestions" value="{{ property.location|default:'' }}" required placeholder="{% trans 'e.g. Mirpur or type your own area' %}" class="minimal-input" autocomplete="off" disabled>
+                            <datalist id="area-suggestions">
+                                <!-- Options will be dynamically populated via JS -->
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 mb-8 flex items-center flex-wrap gap-3">
+                        <span class="text-xs font-bold text-gray-400">{% trans "Popular:" %}</span>
+                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Mirpur">{% trans "Mirpur" %}</button>
+                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Uttara">{% trans "Uttara" %}</button>
+                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Dhanmondi">{% trans "Dhanmondi" %}</button>
+                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Bashundhara">{% trans "Bashundhara" %}</button>
+                    </div>
+
+                    <!-- Detailed Street Address & NEW Landmark Field -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6">
                         <div>
-                            <label class="block text-[0.7rem] font-bold text-gray-500 uppercase tracking-widest mb-1">District</label>
-                            <select name="district" id="district-select" required>
-                                <option value="" disabled selected>Search district...</option>
-                            </select>
+                            <label class="block text-[0.7rem] font-bold text-gray-500 uppercase tracking-widest mb-1">{% trans "Detailed Address" %}</label>
+                            <input type="text" name="street_address" value="{{ property.street_address|default:'' }}" class="minimal-input" placeholder="{% trans 'e.g. Holding 42, Road 7, Block C' %}">
                         </div>
                         <div>
-                            <label class="block text-[0.7rem] font-bold text-gray-500 uppercase tracking-widest mb-1">Area / Location</label>
-                            <select name="location" id="area-select" required disabled>
-                                <option value="" disabled selected>Select district first...</option>
-                            </select>
+                            <label class="block text-[0.7rem] font-bold text-gray-500 uppercase tracking-widest mb-1">{% trans "Nearby Landmark" %} <span class="text-xs text-gray-400 font-medium normal-case">{% trans "(For better Map Pin)" %}</span></label>
+                            <input type="text" name="landmark" value="{{ property.landmark|default:'' }}" class="minimal-input" placeholder="{% trans 'e.g. Mirpur College or Dhaka Bank' %}">
                         </div>
                     </div>
-
-                    <!-- Popular Location Chips -->
-                    <div class="mt-5 flex items-center flex-wrap gap-3">
-                        <span class="text-xs font-bold text-gray-400">Popular:</span>
-                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Mirpur">Mirpur</button>
-                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Uttara">Uttara</button>
-                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Dhanmondi">Dhanmondi</button>
-                        <button type="button" class="location-chip px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-full hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm" data-district="Dhaka" data-area="Bashundhara">Bashundhara</button>
-                    </div>
                 </div>
 
-                <!-- Detailed Street Address (New) -->
-                <div class="mb-12 border-b border-gray-100 pb-10 mt-6">
-                    <label class="flex items-center gap-2 text-[0.75rem] font-bold text-gray-500 uppercase tracking-wider mb-2">
-                        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Detailed Address <span class="text-gray-400 font-medium normal-case tracking-normal ml-1">(Optional)</span>
-                    </label>
-                    <input type="text" name="street_address" class="minimal-input" placeholder="e.g. Holding 42, Road 7, Block C, Rose Valley Apartment">
-                    <p class="text-[0.7rem] text-gray-400 mt-1.5">This builds trust with tenants. Share exact details like building name or sector.</p>
-                </div>
-
-                <!-- 2-Column Grid for Primary Details -->
+                <!-- Primary Details (Made Mandatory) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10 mb-12">
                     
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Listing type</label>
-                        <select name="listing_type" class="minimal-input">
-                            <option value="Rent">For Rent</option>
-                            <option value="Sale">For Sale</option>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{% trans "Listing type" %} <span class="text-red-500 ml-0.5">*</span></label>
+                        <select name="listing_type" class="minimal-input" required>
+                            <option value="" disabled selected>{% trans "Select Type" %}</option>
+                            <option value="Rent">{% trans "For Rent" %}</option>
+                            <option value="Sale">{% trans "For Sale" %}</option>
                         </select>
                     </div>
 
                     <!-- CUSTOM PROPERTY TYPE SELECTOR -->
                     <div class="relative" id="custom-dropdown-container">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Property type</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{% trans "Property type" %} <span class="text-red-500 ml-0.5">*</span></label>
                         <input type="hidden" name="category" id="id_category" value="Residential">
                         <input type="hidden" name="property_type" id="id_property_type" value="Apartment">
 
                         <div id="dropdown-trigger" class="minimal-input flex justify-between items-center cursor-pointer bg-transparent">
-                            <span id="dropdown-display" class="text-gray-900">Apartment</span>
+                            <span id="dropdown-display" class="text-gray-900">{% trans "Apartment" %}</span>
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
 
                         <div id="custom-popover" class="hidden absolute top-full left-0 mt-2 w-[380px] bg-white border border-gray-100 rounded-xl shadow-2xl z-50 p-5">
                             <div class="flex p-1 bg-gray-100 border border-gray-200 rounded-lg mb-5">
-                                <button type="button" id="tab-residential" class="flex-1 py-1.5 text-sm font-bold text-gray-900 bg-white shadow-sm rounded-md transition">Residential</button>
-                                <button type="button" id="tab-commercial" class="flex-1 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition">Commercial</button>
+                                <button type="button" id="tab-residential" class="flex-1 py-1.5 text-sm font-bold text-gray-900 bg-white shadow-sm rounded-md transition">{% trans "Residential" %}</button>
+                                <button type="button" id="tab-commercial" class="flex-1 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition">{% trans "Commercial" %}</button>
                             </div>
                             <div id="grid-residential" class="grid grid-cols-2 gap-4">
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Apartment" data-cat="Residential" class="custom-checkbox" checked><span class="text-sm font-medium text-gray-700">Apartment</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="House" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">House</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Sublet Room" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Sublet Room</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Single Room" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Single Room</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Hostel" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Hostel</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Apartment" data-cat="Residential" class="custom-checkbox" checked><span class="text-sm font-medium text-gray-700">{% trans "Apartment" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="House" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "House" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Sublet Room" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Sublet Room" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Single Room" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Single Room" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Hostel" data-cat="Residential" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Hostel" %}</span></label>
                             </div>
                             <div id="grid-commercial" class="hidden grid grid-cols-2 gap-4">
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Offices" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Offices</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Building" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Building</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Restaurant" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Restaurant</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Factory / Mill" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Factory / Mill</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Commercial" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Commercial</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Warehouse" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Warehouse</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Shop" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Shop</span></label>
-                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Garage" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Garage</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Offices" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Offices" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Building" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Building" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Restaurant" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Restaurant" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Factory / Mill" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Factory / Mill" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Commercial" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Commercial" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Warehouse" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Warehouse" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Shop" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Shop" %}</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer group"><input type="radio" name="pt_dummy" value="Garage" data-cat="Commercial" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">{% trans "Garage" %}</span></label>
                             </div>
                         </div>
                     </div>
 
                     <!-- Financials -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Rent or price (Monthly)</label>
-                        <input type="number" name="rent_or_price" min="2000" step="500" required class="minimal-input font-bold text-emerald-700" placeholder="e.g. 15000">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{% trans "Rent or price (Monthly)" %} <span class="text-red-500 ml-0.5">*</span></label>
+                        <input type="number" name="rent_or_price" value="{{ property.rent_or_price|default:'' }}" min="2000" step="500" required class="minimal-input font-bold text-emerald-700" placeholder="{% trans 'e.g. 15000' %}">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Service charge</label>
-                        <input type="number" name="service_charge" min="0" step="100" value="500" class="minimal-input text-gray-500">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{% trans "Service charge" %} <span class="text-red-500 ml-0.5">*</span></label>
+                        <input type="number" name="service_charge" value="{{ property.service_charge|default:'500' }}" min="0" step="100" class="minimal-input text-gray-500" required>
                     </div>
 
                     <!-- Technical & Target -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Floor Level</label>
-                        <select name="floor" class="minimal-input">
-                            <option value="Ground">Ground Floor</option>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{% trans "Floor Level" %} <span class="text-red-500 ml-0.5">*</span></label>
+                        <select name="floor" class="minimal-input" required>
+                            <option value="" disabled selected>{% trans "Select Floor" %}</option>
+                            <option value="Ground">{% trans "Ground Floor" %}</option>
                             <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
                             <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
-                            <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
-                            <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tenant Preference</label>
-                        <select name="tenant_type" class="minimal-input">
-                            <option value="Family">Family</option>
-                            <option value="Bachelor - Male">Bachelor - Male</option>
-                            <option value="Bachelor - Female">Bachelor - Female</option>
-                            <option value="Bachelor - Any">Bachelor - Any</option>
-                            <option value="Small Family / Couple">Small Family / Couple</option>
-                            <option value="Office / Commercial">Office / Commercial</option>
-                            <option value="Any (family/bachelor)">Any (family/bachelor)</option>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{% trans "Tenant Preference" %} <span class="text-red-500 ml-0.5">*</span></label>
+                        <select name="tenant_type" class="minimal-input" required>
+                            <option value="" disabled selected>{% trans "Select Tenant" %}</option>
+                            <option value="Family">{% trans "Family" %}</option>
+                            <option value="Bachelor - Male">{% trans "Bachelor - Male" %}</option>
+                            <option value="Bachelor - Female">{% trans "Bachelor - Female" %}</option>
+                            <option value="Bachelor - Any">{% trans "Bachelor - Any" %}</option>
+                            <option value="Small Family / Couple">{% trans "Small Family / Couple" %}</option>
+                            <option value="Office / Commercial">{% trans "Office / Commercial" %}</option>
+                            <option value="Any (family/bachelor)">{% trans "Any (family/bachelor)" %}</option>
                         </select>
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Available from</label>
-                        <input type="date" name="available_from" class="minimal-input text-gray-600">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{% trans "Available from" %} <span class="text-red-500 ml-0.5">*</span></label>
+                        <input type="date" name="available_from" value="{{ property.available_from|date:'Y-m-d' }}" class="minimal-input text-gray-600" required>
                     </div>
+                    
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Facing</label>
-                        <select name="facing" class="minimal-input">
-                            <option value="">---------</option>
-                            <option value="East">East</option><option value="West">West</option><option value="North">North</option><option value="South">South</option>
-                            <option value="North-East">North-East</option><option value="North-West">North-West</option><option value="South-East">South-East</option><option value="South-West">South-West</option>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{% trans "Facing" %} <span class="text-red-500 ml-0.5">*</span></label>
+                        <select name="facing" class="minimal-input" required>
+                            <option value="" disabled selected>{% trans "Select Facing Direction" %}</option>
+                            <option value="East">{% trans "East" %}</option><option value="West">{% trans "West" %}</option><option value="North">{% trans "North" %}</option><option value="South">{% trans "South" %}</option>
+                            <option value="North-East">{% trans "North-East" %}</option><option value="North-West">{% trans "North-West" %}</option><option value="South-East">{% trans "South-East" %}</option><option value="South-West">{% trans "South-West" %}</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- Room Details -->
-                <h3 class="section-title mt-8">Room Details</h3>
+                <h3 class="section-title mt-8">{% trans "Room Details" %}</h3>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-12">
                     <div>
-                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Bedrooms</label>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">{% trans "Bedrooms" %}</label>
                         <select name="bedrooms" class="minimal-input"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option></select>
                     </div>
                     <div>
-                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Bathrooms</label>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">{% trans "Bathrooms" %}</label>
                         <select name="bathrooms" class="minimal-input"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option></select>
                     </div>
                     <div>
-                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Balconies</label>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">{% trans "Balconies" %}</label>
                         <select name="balconies" class="minimal-input"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
                     </div>
                     <div>
-                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Drawing</label>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">{% trans "Drawing" %}</label>
                         <select name="drawing_room" class="minimal-input"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select>
                     </div>
                     <div>
-                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">Dining</label>
+                        <label class="block text-[0.75rem] font-bold text-gray-500 mb-1">{% trans "Dining" %}</label>
                         <select name="dining_room" class="minimal-input"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select>
                     </div>
                 </div>
 
                 <!-- Comprehensive Amenities Section -->
-                <h3 class="section-title">Property Amenities & Facilities</h3>
+                <h3 class="section-title">{% trans "Property Amenities & Facilities" %}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-8 mb-12 bg-gray-50 p-6 rounded-xl border border-gray-100">
                     <div class="space-y-4">
-                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">⚡ Gas & Electricity</h4>
-                        <select name="gas_type" class="minimal-input text-sm"><option value="None">No Gas Facility</option><option value="Line Gas">Line Gas (Titas)</option><option value="Cylinder Gas">Cylinder Gas</option></select>
-                        <select name="electricity_meter" class="minimal-input text-sm"><option value="Prepaid Meter">Prepaid Meter</option><option value="Sub-Meter">Sub-Meter</option></select>
+                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">⚡ {% trans "Gas & Electricity" %}</h4>
+                        <select name="gas_type" class="minimal-input text-sm"><option value="None">{% trans "No Gas Facility" %}</option><option value="Line Gas">{% trans "Line Gas (Titas)" %}</option><option value="Cylinder Gas">{% trans "Cylinder Gas" %}</option></select>
+                        <select name="electricity_meter" class="minimal-input text-sm"><option value="Prepaid Meter">{% trans "Prepaid Meter" %}</option><option value="Sub-Meter">{% trans "Sub-Meter" %}</option></select>
                     </div>
                     <div class="space-y-4">
-                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">💧 Water & Parking</h4>
-                        <select name="water_supply" class="minimal-input text-sm"><option value="WASA Line">WASA Line</option><option value="Deep Tube-well">Deep Tube-well (Pump)</option><option value="Both">Both</option></select>
-                        <select name="parking_facility" class="minimal-input text-sm"><option value="None">No Parking</option><option value="Car Parking">Car Parking</option><option value="Bike Parking">Bike Parking</option><option value="Both">Both (Car & Bike)</option></select>
+                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">💧 {% trans "Water & Parking" %}</h4>
+                        <select name="water_supply" class="minimal-input text-sm"><option value="WASA Line">{% trans "WASA Line" %}</option><option value="Deep Tube-well">{% trans "Deep Tube-well (Pump)" %}</option><option value="Both">{% trans "Both" %}</option></select>
+                        <select name="parking_facility" class="minimal-input text-sm"><option value="None">{% trans "No Parking" %}</option><option value="Car Parking">{% trans "Car Parking" %}</option><option value="Bike Parking">{% trans "Bike Parking" %}</option><option value="Both">{% trans "Both (Car Parking & Bike Parking)" %}</option></select>
                     </div>
                     <div class="space-y-4">
-                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">🏗️ Floor Type</h4>
-                        <select name="floor_type" class="minimal-input text-sm"><option value="Tiled">Tiled Floor</option><option value="Normal Floor">Normal Floor / Mosaic</option></select>
+                        <h4 class="text-xs font-extrabold text-gray-800 uppercase">🏗️ {% trans "Floor Type" %}</h4>
+                        <select name="floor_type" class="minimal-input text-sm"><option value="Tiled">{% trans "Tiled Floor" %}</option><option value="Normal Floor">{% trans "Normal Floor / Mosaic" %}</option></select>
                     </div>
 
                     <div class="col-span-1 md:col-span-3 border-t border-gray-200 pt-6 mt-2">
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_attached_bath" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Attached Bath</span></label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_balcony" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Balcony Attached</span></label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_ac_point" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">AC Point</span></label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_geyser_point" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Geyser Point</span></label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_washing_machine_point" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Washing Machine Point</span></label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_lift" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Lift / Elevator</span></label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_generator" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Generator Backup</span></label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_cctv" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">CCTV Camera</span></label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_security_guard" class="custom-checkbox"><span class="text-sm font-medium text-gray-700">Security Guard</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_attached_bath" class="custom-checkbox" {% if property.has_attached_bath %}checked{% endif %}><span class="text-sm font-medium text-gray-700">{% trans "Attached Bath" %}</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_balcony" class="custom-checkbox" {% if property.has_balcony %}checked{% endif %}><span class="text-sm font-medium text-gray-700">{% trans "Balcony Attached" %}</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_ac_point" class="custom-checkbox" {% if property.has_ac_point %}checked{% endif %}><span class="text-sm font-medium text-gray-700">{% trans "AC Point" %}</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_geyser_point" class="custom-checkbox" {% if property.has_geyser_point %}checked{% endif %}><span class="text-sm font-medium text-gray-700">{% trans "Geyser Point" %}</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_washing_machine_point" class="custom-checkbox" {% if property.has_washing_machine_point %}checked{% endif %}><span class="text-sm font-medium text-gray-700">{% trans "Washing Machine Point" %}</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_lift" class="custom-checkbox" {% if property.has_lift %}checked{% endif %}><span class="text-sm font-medium text-gray-700">{% trans "Lift / Elevator" %}</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_generator" class="custom-checkbox" {% if property.has_generator %}checked{% endif %}><span class="text-sm font-medium text-gray-700">{% trans "Generator Backup" %}</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_cctv" class="custom-checkbox" {% if property.has_cctv %}checked{% endif %}><span class="text-sm font-medium text-gray-700">{% trans "CCTV Camera" %}</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="has_security_guard" class="custom-checkbox" {% if property.has_security_guard %}checked{% endif %}><span class="text-sm font-medium text-gray-700">{% trans "Security Guard" %}</span></label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Description -->
-                <div class="mb-10">
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description <span class="text-gray-400 font-medium normal-case tracking-normal ml-1">(Optional)</span></label>
-                    <textarea name="description" rows="3" class="minimal-input resize-none" placeholder="Any additional information you want to share with tenants..."></textarea>
-                </div>
-
                 <!-- Media Uploads with Live Preview -->
-                <h3 class="section-title">Media Uploads</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <h3 class="section-title">{% trans "Media Uploads" %}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
                     <div class="border border-gray-200 rounded-xl p-5 bg-gray-50">
-                        <label class="block text-sm font-bold text-gray-800 mb-3">📸 Upload Photos</label>
-                        <input type="file" name="image" id="image-upload" accept="image/*" multiple class="w-full mb-4 outline-none">
-                        <div id="image-preview-container" class="flex flex-wrap gap-3"></div>
+                        <label class="block text-sm font-bold text-gray-800 mb-3">📸 {% trans "Upload Photos" %} <span class="text-red-500 ml-1 text-base">*</span></label>
+                        <input type="file" name="image" id="image-upload" accept="image/*" multiple class="w-full mb-4 outline-none" {% if not property.image %}required{% endif %}>
+                        <div id="image-preview-container" class="flex flex-wrap gap-3">
+                            {% if property.image %}
+                                <div class="preview-box"><img src="{{ property.image.url }}" alt="Preview"></div>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="border border-gray-200 rounded-xl p-5 bg-gray-50">
-                        <label class="block text-sm font-bold text-gray-800 mb-3">🎥 Upload Video (Optional)</label>
+                        <label class="block text-sm font-bold text-gray-800 mb-3">🎥 {% trans "Upload Video" %}</label>
                         <input type="file" name="video" id="video-upload" accept="video/mp4,video/x-m4v,video/*" class="w-full mb-4 outline-none">
-                        <div id="video-preview-container" class="flex flex-wrap gap-3"></div>
+                        <div id="video-preview-container" class="flex flex-wrap gap-3">
+                            {% if property.video %}
+                                <div class="preview-box" style="width: 180px;">
+                                    <video src="{{ property.video.url }}" controls></video>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
-                <!-- Submit -->
-                <div class="flex items-center justify-end gap-4 mt-12 border-t border-gray-100 pt-6">
-                    <a href="{% url 'dashboard' %}" class="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 transition">Cancel</a>
-                    <button type="submit" class="bg-[#0f9d58] text-white text-sm font-bold px-10 py-3.5 rounded-lg shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:-translate-y-0.5 transition-all">
-                        Publish Listing
-                    </button>
+                <!-- Final Section: Description & Actions -->
+                <div class="mt-12 bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+                    <h3 class="flex items-center gap-2 text-[0.95rem] font-extrabold text-gray-900 mb-5">
+                        📝 {% trans "Description" %}
+                    </h3>
+                    
+                    <div class="relative bg-white rounded-xl border-2 border-gray-200 shadow-sm hover:border-emerald-300 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                        <textarea name="description" rows="5" class="w-full bg-transparent border-none p-5 text-[0.95rem] text-gray-800 placeholder-gray-400 outline-none resize-none rounded-xl" placeholder="{% trans 'Describe the best features of your property... (e.g., south-facing, newly painted, friendly neighborhood, 24/7 security)' %}">{{ property.description|default:'' }}</textarea>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-100">
+                        <a href="{% url 'dashboard' %}" class="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-900 transition">{% trans "Cancel" %}</a>
+                        
+                        <!-- Save Draft Button -->
+                        <button type="submit" name="action" value="draft" class="px-6 py-2.5 text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition shadow-sm">
+                            {% trans "Save as Draft" %}
+                        </button>
+                        
+                        <button type="submit" name="action" value="published" class="bg-[#0f9d58] text-white text-sm font-bold px-8 py-3 rounded-lg shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:-translate-y-0.5 transition-all">
+                            {% if property %}{% trans "Update Listing" %}{% else %}{% trans "Publish Listing" %}{% endif %}
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Interactive Scripts -->
+    <!-- Scripts -->
     <script>
-        // --- 1. EXTENDED Location Database (All 64 Districts with Major Upazilas/Areas) ---
+        // Profile Dropdown
+        const profileBtn = document.getElementById('profile-menu-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', (e) => {
+                profileDropdown.classList.toggle('hidden');
+                e.stopPropagation();
+            });
+            document.addEventListener('click', (e) => {
+                if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+                    profileDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        // --- 1. EXTENDED Location Database with SMART INPUT ---
         const locationDB = {
-            "Bagerhat": ["Bagerhat Sadar", "Mongla", "Morrelganj", "Chitalmari", "Fakirhat", "Kachua", "Mollahat", "Rampal", "Sarankhola"],
-            "Bandarban": ["Bandarban Sadar", "Thanchi", "Lama", "Alikadam", "Naikhongchhari", "Rowangchhari", "Ruma"],
-            "Barguna": ["Barguna Sadar", "Amtali", "Patharghata", "Bamna", "Betagi", "Taltali"],
-            "Barishal": ["Barishal Sadar", "Agailjhara", "Babuganj", "Bakerganj", "Banaripara", "Gaurnadi", "Hizla", "Mehendiganj", "Muladi", "Wazirpur", "Rupatali", "Nathullabad"],
-            "Bhola": ["Bhola Sadar", "Char Fasson", "Lalmohan", "Borhanuddin", "Daulatkhan", "Monpura", "Tazumuddin"],
-            "Bogura": ["Bogura Sadar", "Shibganj", "Sherpur", "Adamdighi", "Dhunat", "Dupchanchia", "Gabtali", "Kahaloo", "Nandigram", "Sariakandi", "Sonatala"],
-            "Brahmanbaria": ["Brahmanbaria Sadar", "Ashuganj", "Akhaura", "Bancharampur", "Bijoynagar", "Kasba", "Nabinagar", "Nasirnagar", "Sarail"],
-            "Chandpur": ["Chandpur Sadar", "Hajiganj", "Kachua", "Faridganj", "Haimchar", "Matlab Dakshin", "Matlab Uttar", "Shahrasti"],
-            "Chattogram": ["Agrabad", "Halishahar", "Khulshi", "Nasirabad", "Pahartali", "GEC Circle", "Patenga", "Hathazari", "Sitakunda", "Mirsharai", "Patiya", "Fatikchhari", "Boalkhali", "Chandanaish", "Anwara", "Lohagara", "Satkania", "Banshkhali"],
-            "Chuadanga": ["Chuadanga Sadar", "Alamdanga", "Darshana", "Damurhuda", "Jibannagar"],
-            "Cox's Bazar": ["Cox's Bazar Sadar", "Ramu", "Teknaf", "Ukhia", "Chakaria", "Kutubdia", "Maheshkhali", "Pekua"],
-            "Cumilla": ["Cumilla Sadar", "Kandirpar", "Paduar Bazar", "Kotbari", "Daudkandi", "Laksam", "Barura", "Brahmanpara", "Burichang", "Chandina", "Chauddagram", "Debidwar", "Homna", "Meghna", "Muradnagar", "Nangalkot", "Titas"],
             "Dhaka": ["Mirpur", "Mirpur DOHS", "Uttara", "Dhanmondi", "Bashundhara", "Gulshan", "Banani", "Mohammadpur", "Badda", "Khilgaon", "Motijheel", "Paltan", "Rampura", "Tejgaon", "Savar", "Keraniganj", "Dhamrai", "Nawabganj", "Dohar"],
-            "Dinajpur": ["Dinajpur Sadar", "Phulbari", "Nawabganj", "Biral", "Bochaganj", "Chirirbandar", "Ghoraghat", "Hakimpur", "Kaharole", "Khansama", "Parbatipur", "Birampur"],
-            "Faridpur": ["Faridpur Sadar", "Bhanga", "Boalmari", "Alfadanga", "Charbhadrasan", "Madhukhali", "Nagarkanda", "Sadarpur", "Saltha"],
-            "Feni": ["Feni Sadar", "Chhagalnaiya", "Daganbhuiyan", "Parshuram", "Sonagazi", "Fulgazi"],
-            "Gaibandha": ["Gaibandha Sadar", "Gobindaganj", "Palashbari", "Fulchhari", "Sadullapur", "Saghata", "Sundarganj"],
-            "Gazipur": ["Gazipur Sadar", "Tongi", "Board Bazar", "Chourasta", "Kapasia", "Kaliakair", "Kaliganj", "Sreepur"],
-            "Gopalganj": ["Gopalganj Sadar", "Kotalipara", "Tungipara", "Kashiani", "Muksudpur"],
-            "Habiganj": ["Habiganj Sadar", "Chunarughat", "Madhabpur", "Ajmiriganj", "Bahubal", "Baniyachong", "Lakhai", "Nabiganj", "Shayestaganj"],
-            "Jamalpur": ["Jamalpur Sadar", "Sarishabari", "Melandaha", "Baksiganj", "Dewanganj", "Islampur", "Madarganj"],
-            "Jashore": ["Jashore Sadar", "Abhaynagar", "Benapole", "Bagherpara", "Chaugachha", "Jhikargachha", "Keshabpur", "Manirampur", "Sharsha"],
-            "Jhalokati": ["Jhalokati Sadar", "Nalchity", "Rajapur", "Kathalia"],
-            "Jhenaidah": ["Jhenaidah Sadar", "Shailkupa", "Kaliganj", "Harinakundu", "Kotchandpur", "Maheshpur"],
-            "Joypurhat": ["Joypurhat Sadar", "Panchbibi", "Akkelpur", "Kalai", "Khetlal"],
-            "Khagrachari": ["Khagrachari Sadar", "Dighinala", "Matiranga", "Mahalchhari", "Manikchhari", "Panchhari", "Ramgarh", "Lakshmichhari"],
-            "Khulna": ["Khulna Sadar", "Sonadanga", "Khalishpur", "Daulatpur", "Boyra", "Rupsha", "Batiaghata", "Dacope", "Dumuria", "Dighalia", "Koyra", "Paikgacha", "Phultala", "Terokhada"],
-            "Kishoreganj": ["Kishoreganj Sadar", "Bhairab", "Bajitpur", "Austagram", "Hossainpur", "Itna", "Karimganj", "Katiadi", "Kuliarchar", "Mithamain", "Nikli", "Pakundia", "Tarail"],
-            "Kurigram": ["Kurigram Sadar", "Ulipur", "Nageshwari", "Bhurungamari", "Char Rajibpur", "Chilmari", "Phulbari", "Rajarhat", "Rowmari"],
-            "Kushtia": ["Kushtia Sadar", "Bheramara", "Kumarkhali", "Daulatpur", "Khoksa", "Mirpur"],
-            "Lakshmipur": ["Lakshmipur Sadar", "Ramganj", "Raipur", "Kamalnagar", "Ramgati"],
-            "Lalmonirhat": ["Lalmonirhat Sadar", "Patgram", "Kaliganj", "Aditmari", "Hatibandha"],
-            "Madaripur": ["Madaripur Sadar", "Shibchar", "Kalkini", "Rajoir"],
-            "Magura": ["Magura Sadar", "Sreepur", "Mohammadpur", "Shalikha"],
-            "Manikganj": ["Manikganj Sadar", "Singair", "Saturia", "Daulatpur", "Ghior", "Harirampur", "Shivalaya"],
-            "Meherpur": ["Meherpur Sadar", "Gangni", "Mujibnagar"],
-            "Moulvibazar": ["Moulvibazar Sadar", "Sreemangal", "Kulaura", "Barlekha", "Juri", "Kamalganj", "Rajnagar"],
-            "Munshiganj": ["Munshiganj Sadar", "Sirajdikhan", "Sreenagar", "Gazaria", "Lauhajang", "Tongibari"],
-            "Mymensingh": ["Mymensingh Sadar", "Bhaluka", "Muktagacha", "Trishal", "Dhobaura", "Fulbaria", "Gaffargaon", "Gauripur", "Haluaghat", "Ishwarganj", "Nandail", "Phulpur", "Tara Khanda"],
-            "Naogaon": ["Naogaon Sadar", "Niamatpur", "Sapahar", "Atrai", "Badalgachhi", "Dhamoirhat", "Manda", "Mohadevpur", "Patnitala", "Porsha", "Raninagar"],
-            "Narail": ["Narail Sadar", "Lohagara", "Kalia"],
-            "Narayanganj": ["Narayanganj Sadar", "Chashara", "Fatullah", "Siddhirganj", "Rupganj", "Sonargaon", "Araihazar"],
-            "Narsingdi": ["Narsingdi Sadar", "Shibpur", "Raipura", "Belabo", "Monohardi", "Palash"],
-            "Natore": ["Natore Sadar", "Singra", "Baraigram", "Bagatipara", "Gurudaspur", "Lalpur", "Naldanga"],
-            "Netrokona": ["Netrokona Sadar", "Kendua", "Mohanganj", "Atpara", "Barhatta", "Durgapur", "Kalmakanda", "Khaliajuri", "Madan", "Purbadhala"],
-            "Nilphamari": ["Nilphamari Sadar", "Saidpur", "Domar", "Dimla", "Jaldhaka", "Kishoreganj"],
-            "Noakhali": ["Maijdee", "Noakhali Sadar", "Begumganj", "Chatkhil", "Companiganj", "Hatiya", "Kabirhat", "Senbagh", "Sonaimuri", "Subarnachar"],
-            "Pabna": ["Pabna Sadar", "Ishwardi", "Bera", "Atgharia", "Bhangura", "Chatmohar", "Faridpur", "Santhia", "Sujanagar"],
-            "Panchagarh": ["Panchagarh Sadar", "Boda", "Tetulia", "Atwari", "Debiganj"],
-            "Patuakhali": ["Patuakhali Sadar", "Bauphal", "Galachipa", "Dashmina", "Dumki", "Kalapara", "Mirzaganj", "Rangabali"],
-            "Pirojpur": ["Pirojpur Sadar", "Bhandaria", "Mathbaria", "Indurkani", "Kawkhali", "Nazirpur", "Nesarabad"],
-            "Rajbari": ["Rajbari Sadar", "Pangsha", "Goalanda", "Baliakandi", "Kalukhali"],
-            "Rajshahi": ["Rajshahi Sadar", "Shaheb Bazar", "Motihar", "Boalia", "Rajpara", "Godagari", "Bagha", "Bagmara", "Charghat", "Durgapur", "Mohanpur", "Paba", "Puthia", "Tanore"],
-            "Rangamati": ["Rangamati Sadar", "Kaptai", "Baghaichhari", "Belaichhari", "Barkal", "Juraichhari", "Kawkhali", "Langadu", "Naniarchar", "Rajasthali"],
-            "Rangpur": ["Rangpur Sadar", "Mithapukur", "Pirganj", "Badarganj", "Gangachhara", "Kaunia", "Pirgachha", "Taraganj"],
-            "Satkhira": ["Satkhira Sadar", "Shyamnagar", "Assasuni", "Debhata", "Kalaroa", "Kaliganj", "Tala"],
-            "Shariatpur": ["Shariatpur Sadar", "Zanjira", "Bhedarganj", "Damudya", "Gosairhat", "Naria"],
-            "Sherpur": ["Sherpur Sadar", "Nalitabari", "Sreebardi", "Jhenaigati", "Nakla"],
-            "Sirajganj": ["Sirajganj Sadar", "Shahjadpur", "Ullahpara", "Belkuchi", "Chauhali", "Kamarkhanda", "Kazipur", "Raiganj", "Tarash"],
-            "Sunamganj": ["Sunamganj Sadar", "Chhatak", "Jagannathpur", "Bishwamvarpur", "Derai", "Dharamapasha", "Dowarabazar", "Jamalganj", "Sullah", "Tahirpur"],
+            "Chattogram": ["Agrabad", "Halishahar", "Khulshi", "Nasirabad", "Pahartali", "GEC Circle", "Patenga", "Hathazari", "Sitakunda", "Mirsharai", "Patiya", "Fatikchhari", "Boalkhali", "Chandanaish", "Anwara", "Lohagara", "Satkania", "Banshkhali"],
             "Sylhet": ["Sylhet Sadar", "Zindabazar", "Uposhohor", "Amberkhana", "Bandarbazar", "Shibganj", "Beanibazar", "Bishwanath", "Companiganj", "Dakshin Surma", "Fenchuganj", "Golapganj", "Gowainghat", "Jaintiapur", "Kanaighat", "Osmani Nagar", "Zakiganj"],
-            "Tangail": ["Tangail Sadar", "Mirzapur", "Ghatail", "Basail", "Bhuapur", "Delduar", "Dhanbari", "Gopalpur", "Kalihati", "Madhupur", "Nagarpur", "Sakhipur"],
-            "Thakurgaon": ["Thakurgaon Sadar", "Pirganj", "Baliadangi", "Haripur", "Ranisankail"]
+            "Rajshahi": ["Rajshahi Sadar", "Shaheb Bazar", "Motihar", "Boalia", "Rajpara", "Godagari", "Bagha", "Bagmara", "Charghat", "Durgapur", "Mohanpur", "Paba", "Puthia", "Tanore"],
+            "Khulna": ["Khulna Sadar", "Sonadanga", "Khalishpur", "Daulatpur", "Boyra", "Rupsha", "Batiaghata", "Dacope", "Dumuria", "Dighalia", "Koyra", "Paikgacha", "Phultala", "Terokhada"],
+            "Barishal": ["Barishal Sadar", "Agailjhara", "Babuganj", "Bakerganj", "Banaripara", "Gaurnadi", "Hizla", "Mehendiganj", "Muladi", "Wazirpur", "Rupatali", "Nathullabad"],
+            "Cumilla": ["Cumilla Sadar", "Kandirpar", "Paduar Bazar", "Kotbari", "Daudkandi", "Laksam", "Barura", "Brahmanpara", "Burichang", "Chandina", "Chauddagram", "Debidwar", "Homna", "Meghna", "Muradnagar", "Nangalkot", "Titas"]
         };
 
-        // Initialize Choices.js
-        const districtSelect = new Choices('#district-select', { searchPlaceholderValue: "Search your district...", itemSelectText: "" });
-        const areaSelect = new Choices('#area-select', { searchPlaceholderValue: "Search your area...", itemSelectText: "" });
+        const districtSelect = new Choices('#district-select', { searchPlaceholderValue: "{% trans 'Search your district...' %}", itemSelectText: "" });
+        const areaInput = document.getElementById('area-input');
+        const areaSuggestions = document.getElementById('area-suggestions');
 
-        // Populate Districts A-Z
         const districts = Object.keys(locationDB).sort();
-        const districtChoices = districts.map(d => ({ value: d, label: d }));
-        districtSelect.setChoices(districtChoices, 'value', 'label', true);
+        districtSelect.setChoices(districts.map(d => ({ value: d, label: d })), 'value', 'label', true);
 
-        // Handle District Change (Dependent Area Logic)
         document.getElementById('district-select').addEventListener('change', function(e) {
             const selectedDistrict = e.target.value;
-            areaSelect.clearChoices();
-            areaSelect.clearStore();
+            areaInput.value = '';
+            areaSuggestions.innerHTML = '';
             
             if (selectedDistrict && locationDB[selectedDistrict]) {
                 const areas = locationDB[selectedDistrict].sort();
-                const areaChoices = areas.map(a => ({ value: a, label: a }));
-                
-                areaSelect.setChoices(areaChoices, 'value', 'label', true);
-                areaSelect.enable();
+                areas.forEach(area => {
+                    const option = document.createElement('option');
+                    option.value = area;
+                    areaSuggestions.appendChild(option);
+                });
+                areaInput.disabled = false;
+                areaInput.placeholder = "{% trans 'Select or type your area' %}";
             } else {
-                areaSelect.disable();
+                areaInput.disabled = true;
+                areaInput.placeholder = "{% trans 'Select district first...' %}";
             }
         });
 
-        // Quick Select Chips Logic
         document.querySelectorAll('.location-chip').forEach(chip => {
             chip.addEventListener('click', function() {
                 const dist = this.getAttribute('data-district');
@@ -417,12 +466,17 @@
                 
                 districtSelect.setChoiceByValue(dist);
                 
-                areaSelect.clearChoices();
+                // Populate datalist
+                areaSuggestions.innerHTML = '';
                 const areas = locationDB[dist].sort();
-                areaSelect.setChoices(areas.map(a => ({ value: a, label: a })), 'value', 'label', true);
-                areaSelect.enable();
+                areas.forEach(a => {
+                    const option = document.createElement('option');
+                    option.value = a;
+                    areaSuggestions.appendChild(option);
+                });
                 
-                setTimeout(() => { areaSelect.setChoiceByValue(area); }, 100);
+                areaInput.disabled = false;
+                areaInput.value = area;
             });
         });
 
@@ -445,13 +499,11 @@
             if(type === 'Residential') {
                 tabRes.className = 'flex-1 py-1.5 text-sm font-bold text-gray-900 bg-white shadow-sm rounded-md transition';
                 tabCom.className = 'flex-1 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition bg-transparent';
-                gridRes.classList.remove('hidden');
-                gridCom.classList.add('hidden');
+                gridRes.classList.remove('hidden'); gridCom.classList.add('hidden');
             } else {
                 tabCom.className = 'flex-1 py-1.5 text-sm font-bold text-gray-900 bg-white shadow-sm rounded-md transition';
                 tabRes.className = 'flex-1 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition bg-transparent';
-                gridCom.classList.remove('hidden');
-                gridRes.classList.add('hidden');
+                gridCom.classList.remove('hidden'); gridRes.classList.add('hidden');
             }
         }
         tabRes.addEventListener('click', () => switchTab('Residential'));
@@ -461,7 +513,7 @@
             radio.addEventListener('change', (e) => {
                 inputCategory.value = e.target.getAttribute('data-cat');
                 inputPropertyType.value = e.target.value;
-                display.innerText = e.target.value;
+                display.innerText = e.target.nextElementSibling.innerText; // Keep translation text visible
                 popover.classList.add('hidden');
             });
         });
@@ -503,6 +555,57 @@
                 reader.readAsDataURL(file);
             }
         });
+
+        // ==========================================
+        // AUTO PRE-FILL LOGIC FOR EDIT MODE
+        // ==========================================
+        {% if property %}
+        window.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelector('select[name="listing_type"]').value = "{{ property.listing_type }}";
+            document.querySelector('select[name="floor"]').value = "{{ property.floor }}";
+            document.querySelector('select[name="tenant_type"]').value = "{{ property.tenant_type }}";
+            document.querySelector('select[name="facing"]').value = "{{ property.facing|default:'' }}";
+            document.querySelector('select[name="bedrooms"]').value = "{{ property.bedrooms }}";
+            document.querySelector('select[name="bathrooms"]').value = "{{ property.bathrooms }}";
+            document.querySelector('select[name="balconies"]').value = "{{ property.balconies }}";
+            document.querySelector('select[name="drawing_room"]').value = "{{ property.drawing_room }}";
+            document.querySelector('select[name="dining_room"]').value = "{{ property.dining_room }}";
+            document.querySelector('select[name="gas_type"]').value = "{{ property.gas_type }}";
+            document.querySelector('select[name="electricity_meter"]').value = "{{ property.electricity_meter }}";
+            document.querySelector('select[name="water_supply"]').value = "{{ property.water_supply }}";
+            document.querySelector('select[name="parking_facility"]').value = "{{ property.parking_facility }}";
+            document.querySelector('select[name="floor_type"]').value = "{{ property.floor_type }}";
+
+            const savedCat = "{{ property.category }}";
+            const savedType = "{{ property.property_type }}";
+            document.getElementById('id_category').value = savedCat;
+            document.getElementById('id_property_type').value = savedType;
+            
+            switchTab(savedCat);
+            const radio = document.querySelector(`input[name="pt_dummy"][value="${savedType}"]`);
+            if(radio) {
+                radio.checked = true;
+                document.getElementById('dropdown-display').innerText = radio.nextElementSibling.innerText;
+            }
+
+            setTimeout(() => {
+                districtSelect.setChoiceByValue('{{ property.district }}');
+                
+                // Populate datalist for Edit mode
+                areaSuggestions.innerHTML = '';
+                if(locationDB['{{ property.district }}']){
+                    const areas = locationDB['{{ property.district }}'].sort();
+                    areas.forEach(a => {
+                        const option = document.createElement('option');
+                        option.value = a;
+                        areaSuggestions.appendChild(option);
+                    });
+                }
+                areaInput.disabled = false;
+                areaInput.value = "{{ property.location }}";
+            }, 100);
+        });
+        {% endif %}
     </script>
 </body>
 </html>

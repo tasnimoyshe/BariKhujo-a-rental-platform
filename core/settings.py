@@ -37,12 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'properties',  # <--- এই লাইনটি যোগ করবেন
+    'properties',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # <--- এই নতুন লাইনটি হুবহু এখানে যুক্ত করুন
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -105,26 +106,45 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.1/topics/i18n/
+from django.utils.translation import gettext_lazy as _
 
-LANGUAGE_CODE = 'en-us'
+# ==========================================
+# Internationalization (English & Bangla)
+# ==========================================
+
+LANGUAGE_CODE = 'en'
+
+# ওয়েবসাইটের সাপোর্টেড ভাষাগুলো
+LANGUAGES = [
+    ('en', _('English')),
+    ('bn', _('Bangla')),
+]
 
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
 USE_TZ = True
 
+# অনুবাদের ফাইলগুলো (Translations) যেখানে সেভ হবে
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
+# ==========================================
 # Static files (CSS, JavaScript, Images)
+# ==========================================
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 
-# Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+# ==========================================
+# Email & Media Configuration
+# ==========================================
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -134,3 +154,6 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+# Password Reset Email Settings (For Testing)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
